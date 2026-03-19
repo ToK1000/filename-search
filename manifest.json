@@ -1,0 +1,10 @@
+{
+  "id": "filename-search",
+  "name": "Filename Search",
+  "version": "0.0.1",
+  "minAppVersion": "1.5.0",
+  "description": "Adds a sidebar search that searches only file names across the vault.",
+  "author": "Torsten",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

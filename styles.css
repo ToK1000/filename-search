@@ -1,0 +1,88 @@
+.ofs-modal .modal-content,
+.ofs-view {
+	padding: 12px;
+}
+
+.ofs-view {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.ofs-description,
+.ofs-summary,
+.ofs-empty,
+.ofs-more-results,
+.ofs-result-meta {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.ofs-description {
+	margin-bottom: 8px;
+}
+
+.ofs-input {
+	width: 100%;
+	padding: 8px 10px;
+	margin-bottom: 8px;
+	font-size: 14px;
+}
+
+.ofs-summary {
+	margin-bottom: 8px;
+}
+
+.ofs-results {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.ofs-result-item {
+	padding: 7px 9px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 7px;
+	cursor: pointer;
+	transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.ofs-result-item:hover,
+.ofs-result-item.is-selected {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.ofs-result-name {
+	font-weight: 600;
+	line-height: 1.25;
+}
+
+.ofs-result-path {
+	font-size: 12px;
+	color: var(--text-muted);
+	word-break: break-word;
+	margin-top: 2px;
+	line-height: 1.2;
+}
+
+.ofs-result-meta {
+	margin-top: 2px;
+	line-height: 1.2;
+}
+
+.ofs-settings-empty {
+	color: var(--text-muted);
+	font-size: 13px;
+	padding: 8px 0 4px;
+}
+
+.ofs-settings-list .setting-item {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 8px 12px;
+	margin-bottom: 8px;
+}
