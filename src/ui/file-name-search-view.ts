@@ -1,4 +1,4 @@
-import { ItemView, Keymap, setIcon, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, Keymap, setIcon, setTooltip, TFile, WorkspaceLeaf } from "obsidian";
 import { FolderSizeNode, formatFolderSize } from "../folders/folder-sizes";
 import { getEffectiveItemIconValue, getEffectiveStyle } from "../features/item-icon-source";
 import { renderStoredIcon } from "../features/icon-renderer";
@@ -335,7 +335,22 @@ export class FileNameSearchView extends ItemView {
 				cls: "ofs-pinned-item-path",
 			});
 
+			const removeButton = row.createEl("button", {
+				cls: "ofs-pinned-item-remove clickable-icon",
+				attr: { type: "button", "aria-label": this.plugin.strings.pinnedRemove },
+			});
+			setIcon(removeButton, "pin-off");
+			setTooltip(removeButton, this.plugin.strings.pinnedRemove);
+			removeButton.addEventListener("click", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				void this.plugin.removePinnedEverywhere(file.path);
+			});
+
 			row.addEventListener("mousedown", (event) => {
+				if ((event.target as HTMLElement | null)?.closest(".ofs-pinned-item-remove")) {
+					return;
+				}
 				event.preventDefault();
 				void this.openFile(file, event);
 			});

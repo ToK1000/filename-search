@@ -65,6 +65,7 @@ export interface I18nStrings {
 	pinnedDescription: string;
 	pinnedSummary: (count: number) => string;
 	pinnedEmpty: string;
+	pinnedRemove: string;
 	folderBrowserHeading: string;
 	folderBrowserDescription: string;
 	folderBrowserSortLabel: string;
@@ -114,6 +115,22 @@ export interface I18nStrings {
 	settingsOpenFolderBrowserOnExplorerClickDesc: string;
 	settingsUseFrontmatterStickerIcons: string;
 	settingsUseFrontmatterStickerIconsDesc: string;
+	settingsCleanupHeading: string;
+	settingsCleanupTools: string;
+	settingsCleanupToolsDesc: string;
+	settingsCleanupDuplicateBlankLines: string;
+	settingsCleanupDuplicateBlankLinesDesc: string;
+	settingsCleanupListBlankLines: string;
+	settingsCleanupListBlankLinesDesc: string;
+	settingsCleanupEmptyTasks: string;
+	settingsCleanupEmptyTasksDesc: string;
+	settingsCleanupBoldLabels: string;
+	settingsCleanupBoldLabelsDesc: string;
+	settingsCleanupHeadingSpacing: string;
+	settingsCleanupHeadingSpacingDesc: string;
+	settingsFilenameSearchSectionHeading: string;
+	settingsFilenameSearchSection: string;
+	settingsFilenameSearchSectionDesc: string;
 	settingsExcludedFolders: string;
 	settingsExcludedFoldersDesc: string;
 	settingsAddFolder: string;
@@ -131,6 +148,7 @@ export interface I18nStrings {
 	settingsFolderColorRuleDesc: string;
 	settingsEditFolderColorRule: string;
 	settingsRemoveFolderColorRule: string;
+	settingsRuleEntries: string;
 	settingsFolderTextColor: string;
 	settingsFolderTextColorDesc: string;
 	settingsClearFolderTextColor: string;
@@ -211,6 +229,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedDescription: "Shows all pinned files in one compact list.",
 		pinnedSummary: (count: number) => `${count} pinned file${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "No pinned files yet.",
+		pinnedRemove: "Remove pinned status",
 		folderBrowserHeading: "Folder browser",
 		folderBrowserDescription: "Shows folders, notes, images, and files as cards in the main area.",
 		folderBrowserSortLabel: "Sort",
@@ -260,6 +279,22 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsOpenFolderBrowserOnExplorerClickDesc: "When enabled, clicking a folder row in the explorer still expands it and also opens that folder in the main folder browser view.",
 		settingsUseFrontmatterStickerIcons: "Use frontmatter sticker icons",
 		settingsUseFrontmatterStickerIconsDesc: "Use the frontmatter field `sticker` as a fallback file icon when no plugin icon is set. Supports icon names and vault SVG paths.",
+		settingsCleanupHeading: "AI paste cleanup",
+		settingsCleanupTools: "Markdown cleanup rules",
+		settingsCleanupToolsDesc: "Choose which formatting problems should be corrected when you run the cleanup action on the active Markdown note.",
+		settingsCleanupDuplicateBlankLines: "Collapse duplicate blank lines",
+		settingsCleanupDuplicateBlankLinesDesc: "Reduce multiple empty lines to a single empty line.",
+		settingsCleanupListBlankLines: "Remove blank lines inside lists",
+		settingsCleanupListBlankLinesDesc: "Remove pasted empty lines between consecutive bullet, numbered, or task list items.",
+		settingsCleanupEmptyTasks: "Merge empty task markers with following text",
+		settingsCleanupEmptyTasksDesc: "Turns a separated task marker and the following paragraph back into one task line.",
+		settingsCleanupBoldLabels: "Merge bold labels with following paragraph",
+		settingsCleanupBoldLabelsDesc: "Combines patterns like `**Topic:**` plus the next paragraph into a single line.",
+		settingsCleanupHeadingSpacing: "Remove blank lines below headings",
+		settingsCleanupHeadingSpacingDesc: "Removes empty lines directly under Markdown headings.",
+		settingsFilenameSearchSectionHeading: "Filename search settings",
+		settingsFilenameSearchSection: "Filename search configuration",
+		settingsFilenameSearchSectionDesc: "The settings below control the original filename-only search feature, including which folders should be ignored.",
 		settingsExcludedFolders: "Excluded folders",
 		settingsExcludedFoldersDesc: "Files inside these vault folders will be ignored by the filename search.",
 		settingsAddFolder: "Add folder",
@@ -277,6 +312,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsFolderColorRuleDesc: "Styles the matching folder in the file explorer",
 		settingsEditFolderColorRule: "Edit",
 		settingsRemoveFolderColorRule: "Remove folder color rule",
+		settingsRuleEntries: "entries",
 		settingsFolderTextColor: "Text color",
 		settingsFolderTextColorDesc: "Choose the folder label color.",
 		settingsClearFolderTextColor: "Clear text color",
@@ -355,6 +391,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedDescription: "Zeigt alle angepinnten Dateien in einer kompakten Liste an.",
 		pinnedSummary: (count: number) => `${count} angepinnte Datei${count === 1 ? "" : "en"}`,
 		pinnedEmpty: "Noch keine angepinnten Dateien.",
+		pinnedRemove: "Pin-Status entfernen",
 		folderBrowserHeading: "Ordneransicht",
 		folderBrowserDescription: "Zeigt Ordner, Notizen, Bilder und Dateien als Karten im Hauptbereich an.",
 		folderBrowserSortLabel: "Sortierung",
@@ -404,6 +441,22 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Wenn aktiv, klappt ein Klick auf eine Ordnerzeile den Ordner weiter wie gewohnt auf und öffnet ihn zusätzlich in der Ordneransicht im Hauptbereich.",
 		settingsUseFrontmatterStickerIcons: "Frontmatter-Sticker als Icons verwenden",
 		settingsUseFrontmatterStickerIconsDesc: "Verwendet das Frontmatter-Feld `sticker` als Fallback-Datei-Icon, wenn kein Plugin-Icon gesetzt ist. Unterstützt Icon-Namen und Vault-SVG-Pfade.",
+		settingsCleanupHeading: "KI-Paste-Bereinigung",
+		settingsCleanupTools: "Markdown-Bereinigungsregeln",
+		settingsCleanupToolsDesc: "Lege fest, welche Formatierungsprobleme beim Bereinigen der aktiven Markdown-Notiz automatisch korrigiert werden sollen.",
+		settingsCleanupDuplicateBlankLines: "Doppelte Leerzeilen zusammenziehen",
+		settingsCleanupDuplicateBlankLinesDesc: "Reduziert mehrere leere Zeilen auf genau eine leere Zeile.",
+		settingsCleanupListBlankLines: "Leerzeilen in Listen entfernen",
+		settingsCleanupListBlankLinesDesc: "Entfernt eingefügte Leerzeilen zwischen aufeinanderfolgenden Bullet-, Nummern- und Task-Listenpunkten.",
+		settingsCleanupEmptyTasks: "Leere Task-Marker mit Folgetext verbinden",
+		settingsCleanupEmptyTasksDesc: "Führt getrennte Task-Marker und den folgenden Absatz wieder zu einer sauberen Task-Zeile zusammen.",
+		settingsCleanupBoldLabels: "Fette Labels mit Folgetext verbinden",
+		settingsCleanupBoldLabelsDesc: "Verbindet Muster wie `**Thema:**` und den folgenden Absatz wieder zu einer Zeile.",
+		settingsCleanupHeadingSpacing: "Leerzeilen unter Überschriften entfernen",
+		settingsCleanupHeadingSpacingDesc: "Entfernt leere Zeilen direkt unter Markdown-Überschriften.",
+		settingsFilenameSearchSectionHeading: "Dateinamensuche",
+		settingsFilenameSearchSection: "Konfiguration der Dateinamensuche",
+		settingsFilenameSearchSectionDesc: "Die folgenden Einstellungen betreffen die ursprüngliche Dateinamensuche, einschließlich der Ordner, die ignoriert werden sollen.",
 		settingsExcludedFolders: "Ausgeschlossene Ordner",
 		settingsExcludedFoldersDesc: "Dateien in diesen Vault-Ordnern werden bei der Dateinamensuche ignoriert.",
 		settingsAddFolder: "Ordner hinzufügen",
@@ -421,6 +474,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsFolderColorRuleDesc: "Formatiert den passenden Ordner im Datei-Explorer",
 		settingsEditFolderColorRule: "Bearbeiten",
 		settingsRemoveFolderColorRule: "Ordner-Farbregel entfernen",
+		settingsRuleEntries: "Einträge",
 		settingsFolderTextColor: "Textfarbe",
 		settingsFolderTextColorDesc: "Wähle die Farbe der Ordnerbeschriftung.",
 		settingsClearFolderTextColor: "Textfarbe entfernen",
@@ -499,6 +553,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedDescription: "Muestra todos los archivos fijados en una lista compacta.",
 		pinnedSummary: (count: number) => `${count} archivo${count === 1 ? "" : "s"} fijado${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "Todavia no hay archivos fijados.",
+		pinnedRemove: "Quitar estado fijado",
 		folderBrowserHeading: "Navegador de carpetas",
 		folderBrowserDescription: "Muestra carpetas, notas, imagenes y archivos como tarjetas en el area principal.",
 		folderBrowserSortLabel: "Ordenar",
@@ -548,6 +603,22 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Si esta opcion esta activa, al hacer clic en una fila de carpeta del explorador de archivos tambien se abre su contenido en la vista principal del navegador de carpetas.",
 		settingsUseFrontmatterStickerIcons: "Usar iconos sticker del frontmatter",
 		settingsUseFrontmatterStickerIconsDesc: "Usa el campo `sticker` del frontmatter como icono alternativo para archivos cuando no haya un icono del plugin. Admite nombres de iconos y rutas SVG del vault.",
+		settingsCleanupHeading: "Limpieza de pegado de IA",
+		settingsCleanupTools: "Reglas de limpieza Markdown",
+		settingsCleanupToolsDesc: "Elige que problemas de formato deben corregirse cuando ejecutes la limpieza sobre la nota Markdown activa.",
+		settingsCleanupDuplicateBlankLines: "Reducir lineas vacias duplicadas",
+		settingsCleanupDuplicateBlankLinesDesc: "Reduce varias lineas vacias a una sola linea vacia.",
+		settingsCleanupListBlankLines: "Eliminar lineas vacias dentro de listas",
+		settingsCleanupListBlankLinesDesc: "Elimina lineas vacias pegadas entre elementos consecutivos de listas con viñetas, numeradas o de tareas.",
+		settingsCleanupEmptyTasks: "Unir tareas vacias con el texto siguiente",
+		settingsCleanupEmptyTasksDesc: "Convierte un marcador de tarea separado y el parrafo siguiente en una sola linea de tarea.",
+		settingsCleanupBoldLabels: "Unir etiquetas en negrita con el texto siguiente",
+		settingsCleanupBoldLabelsDesc: "Combina patrones como `**Tema:**` y el siguiente parrafo en una sola linea.",
+		settingsCleanupHeadingSpacing: "Eliminar lineas vacias bajo encabezados",
+		settingsCleanupHeadingSpacingDesc: "Elimina lineas vacias directamente debajo de encabezados Markdown.",
+		settingsFilenameSearchSectionHeading: "Busqueda por nombre de archivo",
+		settingsFilenameSearchSection: "Configuracion de la busqueda por nombre de archivo",
+		settingsFilenameSearchSectionDesc: "Los ajustes siguientes controlan la funcion original de busqueda solo por nombre de archivo, incluidas las carpetas que deben ignorarse.",
 		settingsExcludedFolders: "Carpetas excluidas",
 		settingsExcludedFoldersDesc: "Los archivos dentro de estas carpetas del vault se ignoraran en la busqueda.",
 		settingsAddFolder: "Anadir carpeta",
@@ -565,6 +636,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsFolderColorRuleDesc: "Da estilo a la carpeta coincidente en el explorador de archivos",
 		settingsEditFolderColorRule: "Editar",
 		settingsRemoveFolderColorRule: "Eliminar regla de color de carpeta",
+		settingsRuleEntries: "entradas",
 		settingsFolderTextColor: "Color del texto",
 		settingsFolderTextColorDesc: "Elige el color de la etiqueta de la carpeta.",
 		settingsClearFolderTextColor: "Quitar color del texto",
@@ -643,6 +715,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedDescription: "Affiche tous les fichiers epingles dans une liste compacte.",
 		pinnedSummary: (count: number) => `${count} fichier${count === 1 ? "" : "s"} epingle${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "Aucun fichier epingle pour le moment.",
+		pinnedRemove: "Retirer le statut epingle",
 		folderBrowserHeading: "Navigateur de dossiers",
 		folderBrowserDescription: "Affiche les dossiers, notes, images et fichiers sous forme de cartes dans la zone principale.",
 		folderBrowserSortLabel: "Tri",
@@ -692,6 +765,22 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Lorsque cette option est activee, un clic sur une ligne de dossier dans l'explorateur de fichiers ouvre aussi son contenu dans la vue principale du navigateur de dossiers.",
 		settingsUseFrontmatterStickerIcons: "Utiliser les stickers du frontmatter comme icones",
 		settingsUseFrontmatterStickerIconsDesc: "Utilise le champ `sticker` du frontmatter comme icone de secours pour les fichiers lorsqu'aucune icone du plugin n'est definie. Prend en charge les noms d'icones et les chemins SVG du vault.",
+		settingsCleanupHeading: "Nettoyage des collages IA",
+		settingsCleanupTools: "Regles de nettoyage Markdown",
+		settingsCleanupToolsDesc: "Choisissez quels problemes de mise en forme doivent etre corriges lorsque vous lancez le nettoyage sur la note Markdown active.",
+		settingsCleanupDuplicateBlankLines: "Fusionner les lignes vides en double",
+		settingsCleanupDuplicateBlankLinesDesc: "Reduit plusieurs lignes vides a une seule ligne vide.",
+		settingsCleanupListBlankLines: "Supprimer les lignes vides dans les listes",
+		settingsCleanupListBlankLinesDesc: "Supprime les lignes vides collees entre des elements consecutifs de listes a puces, numerotees ou de taches.",
+		settingsCleanupEmptyTasks: "Fusionner les taches vides avec le texte suivant",
+		settingsCleanupEmptyTasksDesc: "Transforme un marqueur de tache separe et le paragraphe suivant en une seule ligne de tache.",
+		settingsCleanupBoldLabels: "Fusionner les libelles en gras avec le texte suivant",
+		settingsCleanupBoldLabelsDesc: "Combine des motifs comme `**Sujet:**` et le paragraphe suivant sur une seule ligne.",
+		settingsCleanupHeadingSpacing: "Supprimer les lignes vides sous les titres",
+		settingsCleanupHeadingSpacingDesc: "Supprime les lignes vides directement sous les titres Markdown.",
+		settingsFilenameSearchSectionHeading: "Recherche par nom de fichier",
+		settingsFilenameSearchSection: "Configuration de la recherche par nom de fichier",
+		settingsFilenameSearchSectionDesc: "Les reglages ci-dessous controlent la fonction d'origine de recherche uniquement par nom de fichier, y compris les dossiers a ignorer.",
 		settingsExcludedFolders: "Dossiers exclus",
 		settingsExcludedFoldersDesc: "Les fichiers de ces dossiers du vault seront ignores par la recherche.",
 		settingsAddFolder: "Ajouter un dossier",
@@ -709,6 +798,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsFolderColorRuleDesc: "Met en forme le dossier correspondant dans l'explorateur de fichiers",
 		settingsEditFolderColorRule: "Modifier",
 		settingsRemoveFolderColorRule: "Supprimer la regle de couleur du dossier",
+		settingsRuleEntries: "entrees",
 		settingsFolderTextColor: "Couleur du texte",
 		settingsFolderTextColorDesc: "Choisissez la couleur du libelle du dossier.",
 		settingsClearFolderTextColor: "Effacer la couleur du texte",
@@ -787,6 +877,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedDescription: "Mostra todos os arquivos fixados em uma lista compacta.",
 		pinnedSummary: (count: number) => `${count} arquivo${count === 1 ? "" : "s"} fixado${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "Nenhum arquivo fixado ainda.",
+		pinnedRemove: "Remover status fixado",
 		folderBrowserHeading: "Navegador de pastas",
 		folderBrowserDescription: "Mostra pastas, notas, imagens e arquivos como cards na area principal.",
 		folderBrowserSortLabel: "Ordenar",
@@ -836,6 +927,22 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Quando ativado, clicar em uma linha de pasta no explorador de arquivos tambem abre seu conteudo na visualizacao principal do navegador de pastas.",
 		settingsUseFrontmatterStickerIcons: "Usar stickers do frontmatter como icones",
 		settingsUseFrontmatterStickerIconsDesc: "Usa o campo `sticker` do frontmatter como icone alternativo para arquivos quando nenhum icone do plugin estiver definido. Suporta nomes de icones e caminhos SVG do vault.",
+		settingsCleanupHeading: "Limpeza de colagem por IA",
+		settingsCleanupTools: "Regras de limpeza Markdown",
+		settingsCleanupToolsDesc: "Escolha quais problemas de formatacao devem ser corrigidos quando voce executar a limpeza na nota Markdown ativa.",
+		settingsCleanupDuplicateBlankLines: "Juntar linhas vazias duplicadas",
+		settingsCleanupDuplicateBlankLinesDesc: "Reduz varias linhas vazias para apenas uma linha vazia.",
+		settingsCleanupListBlankLines: "Remover linhas vazias dentro de listas",
+		settingsCleanupListBlankLinesDesc: "Remove linhas vazias coladas entre itens consecutivos de listas com marcadores, numeradas ou de tarefas.",
+		settingsCleanupEmptyTasks: "Unir tarefas vazias com o texto seguinte",
+		settingsCleanupEmptyTasksDesc: "Transforma um marcador de tarefa separado e o paragrafo seguinte em uma unica linha de tarefa.",
+		settingsCleanupBoldLabels: "Unir rotulos em negrito com o texto seguinte",
+		settingsCleanupBoldLabelsDesc: "Combina padroes como `**Tema:**` e o paragrafo seguinte em uma unica linha.",
+		settingsCleanupHeadingSpacing: "Remover linhas vazias abaixo de titulos",
+		settingsCleanupHeadingSpacingDesc: "Remove linhas vazias diretamente abaixo de titulos Markdown.",
+		settingsFilenameSearchSectionHeading: "Busca por nome de arquivo",
+		settingsFilenameSearchSection: "Configuracao da busca por nome de arquivo",
+		settingsFilenameSearchSectionDesc: "As configuracoes abaixo controlam a funcionalidade original de busca apenas por nome de arquivo, incluindo as pastas que devem ser ignoradas.",
 		settingsExcludedFolders: "Pastas excluidas",
 		settingsExcludedFoldersDesc: "Arquivos dentro dessas pastas do vault serao ignorados pela busca.",
 		settingsAddFolder: "Adicionar pasta",
@@ -853,6 +960,7 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsFolderColorRuleDesc: "Estiliza a pasta correspondente no explorador de arquivos",
 		settingsEditFolderColorRule: "Editar",
 		settingsRemoveFolderColorRule: "Remover regra de cor da pasta",
+		settingsRuleEntries: "entradas",
 		settingsFolderTextColor: "Cor do texto",
 		settingsFolderTextColorDesc: "Escolha a cor do rotulo da pasta.",
 		settingsClearFolderTextColor: "Limpar cor do texto",

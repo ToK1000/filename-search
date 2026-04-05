@@ -21,6 +21,14 @@ export interface FolderViewState {
 	pinnedPaths: string[];
 }
 
+export interface CleanupSettings {
+	collapseDuplicateBlankLines: boolean;
+	collapseListBlankLines: boolean;
+	mergeEmptyTasks: boolean;
+	mergeBoldLabelParagraphs: boolean;
+	removeHeadingBlankLines: boolean;
+}
+
 export type ColorHistoryCategory = "text" | "background" | "icon" | "iconBackground";
 
 export interface ColorHistoryBucket {
@@ -40,6 +48,7 @@ export interface FilenameSearchSettings {
 	explorerStyleRules: ExplorerItemStyleRule[];
 	folderViewStates: Record<string, FolderViewState>;
 	colorHistory: ColorHistorySettings;
+	cleanup: CleanupSettings;
 	openFolderBrowserOnExplorerClick: boolean;
 	useFrontmatterStickerIcons: boolean;
 	showPath: boolean;
@@ -51,6 +60,7 @@ export const DEFAULT_SETTINGS: FilenameSearchSettings = {
 	explorerStyleRules: [],
 	folderViewStates: {},
 	colorHistory: createDefaultColorHistory(),
+	cleanup: createDefaultCleanupSettings(),
 	openFolderBrowserOnExplorerClick: true,
 	useFrontmatterStickerIcons: true,
 	showPath: true,
@@ -99,6 +109,16 @@ export function createDefaultColorHistory(): ColorHistorySettings {
 	};
 }
 
+export function createDefaultCleanupSettings(): CleanupSettings {
+	return {
+		collapseDuplicateBlankLines: true,
+		collapseListBlankLines: true,
+		mergeEmptyTasks: true,
+		mergeBoldLabelParagraphs: true,
+		removeHeadingBlankLines: true,
+	};
+}
+
 export function normalizeColorHistory(
 	history: Partial<Record<ColorHistoryCategory, Partial<ColorHistoryBucket>>> | undefined,
 ): ColorHistorySettings {
@@ -108,6 +128,19 @@ export function normalizeColorHistory(
 		background: normalizeColorBucket(history?.background, defaults.background),
 		icon: normalizeColorBucket(history?.icon, defaults.icon),
 		iconBackground: normalizeColorBucket(history?.iconBackground, defaults.iconBackground),
+	};
+}
+
+export function normalizeCleanupSettings(
+	cleanup: Partial<CleanupSettings> | undefined,
+): CleanupSettings {
+	const defaults = createDefaultCleanupSettings();
+	return {
+		collapseDuplicateBlankLines: cleanup?.collapseDuplicateBlankLines ?? defaults.collapseDuplicateBlankLines,
+		collapseListBlankLines: cleanup?.collapseListBlankLines ?? defaults.collapseListBlankLines,
+		mergeEmptyTasks: cleanup?.mergeEmptyTasks ?? defaults.mergeEmptyTasks,
+		mergeBoldLabelParagraphs: cleanup?.mergeBoldLabelParagraphs ?? defaults.mergeBoldLabelParagraphs,
+		removeHeadingBlankLines: cleanup?.removeHeadingBlankLines ?? defaults.removeHeadingBlankLines,
 	};
 }
 
@@ -189,6 +222,59 @@ export class FilenameSearchSettingTab extends PluginSettingTab {
 				});
 			});
 
+		new Setting(containerEl).setName(strings.settingsCleanupHeading).setHeading();
+
+		new Setting(containerEl)
+			.setName(strings.settingsCleanupTools)
+			.setDesc(strings.settingsCleanupToolsDesc);
+
+		this.addCleanupToggle(
+			containerEl,
+			strings.settingsCleanupDuplicateBlankLines,
+			strings.settingsCleanupDuplicateBlankLinesDesc,
+			"collapseDuplicateBlankLines",
+		);
+		this.addCleanupToggle(
+			containerEl,
+			strings.settingsCleanupListBlankLines,
+			strings.settingsCleanupListBlankLinesDesc,
+			"collapseListBlankLines",
+		);
+		this.addCleanupToggle(
+			containerEl,
+			strings.settingsCleanupEmptyTasks,
+			strings.settingsCleanupEmptyTasksDesc,
+			"mergeEmptyTasks",
+		);
+		this.addCleanupToggle(
+			containerEl,
+			strings.settingsCleanupBoldLabels,
+			strings.settingsCleanupBoldLabelsDesc,
+			"mergeBoldLabelParagraphs",
+		);
+		this.addCleanupToggle(
+			containerEl,
+			strings.settingsCleanupHeadingSpacing,
+			strings.settingsCleanupHeadingSpacingDesc,
+			"removeHeadingBlankLines",
+		);
+
+		const filenameSearchSectionHeading =
+			strings.settingsFilenameSearchSectionHeading ??
+			strings.settingsSearchHeading ??
+			"Filename search";
+		const filenameSearchSectionName =
+			strings.settingsFilenameSearchSection ?? filenameSearchSectionHeading;
+		const filenameSearchSectionDesc =
+			strings.settingsFilenameSearchSectionDesc ??
+			"The settings below control the original filename-only search feature, including which folders should be ignored.";
+
+		new Setting(containerEl).setName(filenameSearchSectionHeading).setHeading();
+
+		new Setting(containerEl)
+			.setName(filenameSearchSectionName)
+			.setDesc(filenameSearchSectionDesc);
+
 		new Setting(containerEl)
 			.setName(strings.settingsExcludedFolders)
 			.setDesc(strings.settingsExcludedFoldersDesc)
@@ -242,34 +328,38 @@ export class FilenameSearchSettingTab extends PluginSettingTab {
 			return;
 		}
 
-		const folderRuleListEl = containerEl.createDiv({ cls: "ofs-settings-list" });
+		const folderRuleListEl = containerEl.createDiv({ cls: "ofs-settings-rule-browser" });
+		renderRuleTree(folderRuleListEl, this.plugin, this.plugin.settings.explorerStyleRules, this.display.bind(this));
+	}
 
-		for (const rule of this.plugin.settings.explorerStyleRules) {
-			const ruleEl = folderRuleListEl.createDiv({ cls: "ofs-settings-rule" });
-
-			new Setting(ruleEl)
-				.setName(rule.path)
-				.setDesc(describeRule(this.plugin, rule))
-				.addButton((button) => {
-					button
-						.setButtonText(strings.settingsEditFolderColorRule)
-						.setCta()
-						.onClick(() => {
-							this.plugin.openItemAppearanceModal(rule.path);
-						});
-				})
-				.addExtraButton((button) => {
-					button
-						.setIcon("trash")
-						.setTooltip(strings.settingsRemoveFolderColorRule)
-						.onClick(async () => {
-							await this.plugin.removeExplorerStyleRule(rule.path);
-							this.display();
-						});
+	private addCleanupToggle(
+		containerEl: HTMLElement,
+		name: string,
+		description: string,
+		key: keyof CleanupSettings,
+	) {
+		new Setting(containerEl)
+			.setName(name)
+			.setDesc(description)
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.cleanup[key]).onChange(async (value) => {
+					await this.plugin.updateSettings({
+						cleanup: {
+							...this.plugin.settings.cleanup,
+							[key]: value,
+						},
+					});
 				});
-		}
+			});
 	}
 }
+
+type RuleTreeNode = {
+	name: string;
+	path: string;
+	children: Map<string, RuleTreeNode>;
+	rules: ExplorerItemStyleRule[];
+};
 
 function describeRule(plugin: ObsidianFilenameSearchPlugin, rule: ExplorerItemStyleRule): string {
 	const parts: string[] = [];
@@ -297,6 +387,111 @@ function describeRule(plugin: ObsidianFilenameSearchPlugin, rule: ExplorerItemSt
 	}
 
 	return parts.join(" • ") || plugin.strings.settingsFolderColorRuleDesc;
+}
+
+function renderRuleTree(
+	parentEl: HTMLElement,
+	plugin: ObsidianFilenameSearchPlugin,
+	rules: ExplorerItemStyleRule[],
+	onRefresh: () => void,
+) {
+	const rootNode: RuleTreeNode = {
+		name: "",
+		path: "",
+		children: new Map(),
+		rules: [],
+	};
+
+	for (const rule of rules) {
+		const segments = rule.path.split("/").filter(Boolean);
+		let currentNode = rootNode;
+		let currentPath = "";
+
+		for (const segment of segments) {
+			currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+			if (!currentNode.children.has(segment)) {
+				currentNode.children.set(segment, {
+					name: segment,
+					path: currentPath,
+					children: new Map(),
+					rules: [],
+				});
+			}
+			currentNode = currentNode.children.get(segment) as RuleTreeNode;
+		}
+
+		currentNode.rules.push(rule);
+	}
+
+	for (const child of Array.from(rootNode.children.values()).sort(compareRuleNodes)) {
+		renderRuleTreeNode(parentEl, plugin, child, onRefresh, 0);
+	}
+}
+
+function renderRuleTreeNode(
+	parentEl: HTMLElement,
+	plugin: ObsidianFilenameSearchPlugin,
+	node: RuleTreeNode,
+	onRefresh: () => void,
+	depth: number,
+) {
+	const detailsEl = parentEl.createEl("details", {
+		cls: "ofs-settings-rule-group",
+	});
+	detailsEl.open = depth === 0;
+	const summaryEl = detailsEl.createEl("summary", {
+		cls: "ofs-settings-rule-group-summary",
+	});
+	summaryEl.createSpan({
+		text: node.name,
+		cls: "ofs-settings-rule-group-name",
+	});
+	summaryEl.createSpan({
+		text: `${node.rules.length + countChildRules(node)} ${plugin.strings.settingsRuleEntries}`,
+		cls: "ofs-settings-rule-group-count",
+	});
+
+	const contentEl = detailsEl.createDiv({ cls: "ofs-settings-rule-group-content" });
+
+	for (const rule of node.rules.sort((left, right) => left.path.localeCompare(right.path))) {
+		const ruleEl = contentEl.createDiv({ cls: "ofs-settings-rule" });
+		new Setting(ruleEl)
+			.setName(rule.path)
+			.setDesc(describeRule(plugin, rule))
+			.addButton((button) => {
+				button
+					.setButtonText(plugin.strings.settingsEditFolderColorRule)
+					.setCta()
+					.onClick(() => {
+						plugin.openItemAppearanceModal(rule.path);
+					});
+			})
+			.addExtraButton((button) => {
+				button
+					.setIcon("trash")
+					.setTooltip(plugin.strings.settingsRemoveFolderColorRule)
+					.onClick(async () => {
+						await plugin.removeExplorerStyleRule(rule.path);
+						onRefresh();
+					});
+			});
+	}
+
+	for (const child of Array.from(node.children.values()).sort(compareRuleNodes)) {
+		renderRuleTreeNode(contentEl, plugin, child, onRefresh, depth + 1);
+	}
+}
+
+function countChildRules(node: RuleTreeNode): number {
+	let count = 0;
+	for (const child of node.children.values()) {
+		count += child.rules.length + countChildRules(child);
+	}
+	return count;
+}
+
+function compareRuleNodes(left: RuleTreeNode, right: RuleTreeNode): number {
+	return left.name.localeCompare(right.name, undefined, { sensitivity: "base" });
 }
 
 class FolderPathModal extends Modal {

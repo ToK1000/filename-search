@@ -16,6 +16,7 @@ import {
 	FilenameSearchSettings,
 	FilenameSearchSettingTab,
 	normalizeColorHistory,
+	normalizeCleanupSettings,
 	normalizeExplorerItemStyleRule,
 	normalizeFolderViewState,
 	normalizeFolderViewStates,
@@ -380,6 +381,31 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 		return this.getFolderViewState(folderPath).pinnedPaths.includes(itemPath);
 	}
 
+	async removePinnedEverywhere(itemPath: string) {
+		const nextFolderViewStates: typeof this.settings.folderViewStates = {};
+		let changed = false;
+
+		for (const [folderPath, state] of Object.entries(this.settings.folderViewStates)) {
+			const nextPinnedPaths = state.pinnedPaths.filter((path) => path !== itemPath);
+			if (nextPinnedPaths.length !== state.pinnedPaths.length) {
+				changed = true;
+			}
+
+			nextFolderViewStates[folderPath] = {
+				...state,
+				pinnedPaths: nextPinnedPaths,
+			};
+		}
+
+		if (!changed) {
+			return;
+		}
+
+		await this.updateSettings({
+			folderViewStates: nextFolderViewStates,
+		});
+	}
+
 	getPinnedFiles(): TFile[] {
 		const uniquePaths = new Set<string>();
 		for (const state of Object.values(this.settings.folderViewStates)) {
@@ -436,6 +462,9 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 			explorerStyleRules: [...(partialSettings.explorerStyleRules ?? this.settings.explorerStyleRules)],
 			folderViewStates: { ...(partialSettings.folderViewStates ?? this.settings.folderViewStates) },
 			colorHistory: { ...(partialSettings.colorHistory ?? this.settings.colorHistory) },
+			cleanup: {
+				...(partialSettings.cleanup ?? this.settings.cleanup),
+			},
 		};
 		await this.saveSettings();
 	}
@@ -473,6 +502,7 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 			explorerStyleRules: getNormalizedExplorerRules(loadedData),
 			folderViewStates: normalizeFolderViewStates(loadedData?.folderViewStates),
 			colorHistory: normalizeColorHistory(loadedData?.colorHistory),
+			cleanup: normalizeCleanupSettings(loadedData?.cleanup),
 			openFolderBrowserOnExplorerClick: loadedData?.openFolderBrowserOnExplorerClick ?? DEFAULT_SETTINGS.openFolderBrowserOnExplorerClick,
 			useFrontmatterStickerIcons: loadedData?.useFrontmatterStickerIcons ?? DEFAULT_SETTINGS.useFrontmatterStickerIcons,
 			showPath: loadedData?.showPath ?? true,
