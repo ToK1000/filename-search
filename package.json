@@ -1,7 +1,7 @@
 {
 	"name": "filename-search",
-	"version": "0.0.1",
-	"description": "Plugin for live searching file names across the vault",
+	"version": "0.1.0",
+	"description": "Explorer enhancements for Obsidian with filename search, styling, pinned items, and cleanup tools",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

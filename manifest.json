@@ -1,9 +1,9 @@
 {
   "id": "filename-search",
   "name": "Filename Search",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "minAppVersion": "1.5.0",
-  "description": "Adds a sidebar search that searches only file names across the vault.",
+  "description": "Adds a filename search, explorer toolbar, folder styling, folder browser, pinned file list, and markdown cleanup tools.",
   "author": "Torsten",
   "authorUrl": "",
   "isDesktopOnly": false
