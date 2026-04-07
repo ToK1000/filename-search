@@ -1,4 +1,5 @@
-import { Component, setIcon, setTooltip, View, WorkspaceLeaf } from "obsidian";
+import { Component, Menu, setIcon, setTooltip, View, WorkspaceLeaf } from "obsidian";
+import { CALLOUT_TOOLBAR_ICON } from "./callout-tool";
 import ObsidianFilenameSearchPlugin, { FILE_NAME_SEARCH_ICON } from "../main";
 
 const FILE_EXPLORER_VIEW_TYPE = "file-explorer";
@@ -48,39 +49,109 @@ export class ExplorerToolbarManager extends Component {
 	private createToolbar(): HTMLDivElement {
 		const toolbarEl = document.createElement("div");
 		toolbarEl.className = TOOLBAR_CLASS;
-		const searchButton = this.createIconButton(
+		const searchButton = this.createSplitButton(
 			this.plugin.strings.explorerToolbarOpenSearch,
 			FILE_NAME_SEARCH_ICON,
 			() => {
 				void this.plugin.activateSearchView("search");
 			},
-		);
-		const folderSizeButton = this.createIconButton(
-			this.plugin.strings.explorerToolbarOpenFolderSizes,
-			"folder-open",
-			() => {
-				void this.plugin.activateFolderSizesView();
+			(menu) => {
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandOpenSearch)
+						.setIcon(FILE_NAME_SEARCH_ICON)
+						.onClick(() => {
+							void this.plugin.activateSearchView("search");
+						}),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.explorerToolbarOpenFolderSizes)
+						.setIcon("folder-open")
+						.onClick(() => {
+							void this.plugin.activateFolderSizesView();
+						}),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.explorerToolbarOpenPinned)
+						.setIcon("pin")
+						.onClick(() => {
+							void this.plugin.activatePinnedItemsView();
+						}),
+				);
 			},
 		);
-		const pinnedButton = this.createIconButton(
-			this.plugin.strings.explorerToolbarOpenPinned,
-			"pin",
-			() => {
-				void this.plugin.activatePinnedItemsView();
-			},
-		);
-		const cleanupButton = this.createIconButton(
+		const cleanupButton = this.createSplitButton(
 			this.plugin.strings.explorerToolbarCleanupEmptyLines,
 			"eraser",
 			() => {
 				void this.plugin.cleanupActiveMarkdown();
 			},
+			(menu) => {
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandCleanupEmptyLines)
+						.setIcon("eraser")
+						.onClick(() => {
+							void this.plugin.cleanupActiveMarkdown();
+						}),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandDemoteHeadings)
+						.setIcon("indent-increase")
+						.onClick(() => {
+							void this.plugin.demoteSelectedHeadings();
+						}),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandPromoteHeadings)
+						.setIcon("indent-decrease")
+						.onClick(() => {
+							void this.plugin.promoteSelectedHeadings();
+						}),
+				);
+			},
+		);
+		const calloutButton = this.createSplitButton(
+			this.plugin.strings.explorerToolbarInsertCallout,
+			CALLOUT_TOOLBAR_ICON,
+			() => {
+				this.plugin.openCalloutPicker();
+			},
+			(menu) => {
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandInsertCallout)
+						.setIcon(CALLOUT_TOOLBAR_ICON)
+						.onClick(() => this.plugin.openCalloutPicker()),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandMergeCalloutsIntoColumns)
+						.setIcon("columns-2")
+						.onClick(() => {
+							void this.plugin.mergeSelectedCalloutsIntoColumns();
+						}),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle(this.plugin.strings.commandUnwrapCallouts)
+						.setIcon("remove-formatting")
+						.onClick(() => {
+							void this.plugin.unwrapSelectedCallouts();
+						}),
+				);
+			},
 		);
 
-		toolbarEl.append(searchButton);
-		toolbarEl.append(folderSizeButton);
-		toolbarEl.append(pinnedButton);
-		toolbarEl.append(cleanupButton);
+		toolbarEl.append(this.createButtonGroup(this.plugin.strings.explorerToolbarGroupSearch, searchButton));
+		toolbarEl.append(this.createGroupSeparator());
+		toolbarEl.append(this.createButtonGroup(this.plugin.strings.explorerToolbarGroupFormatting, cleanupButton));
+		toolbarEl.append(this.createGroupSeparator());
+		toolbarEl.append(this.createButtonGroup(this.plugin.strings.explorerToolbarGroupCallouts, calloutButton));
 		return toolbarEl;
 	}
 
@@ -92,8 +163,60 @@ export class ExplorerToolbarManager extends Component {
 
 		setIcon(buttonEl, icon);
 		setTooltip(buttonEl, label);
+		buttonEl.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+		});
 		buttonEl.addEventListener("click", onClick);
 
 		return buttonEl;
+	}
+
+	private createSplitButton(
+		label: string,
+		icon: string,
+		onClick: () => void,
+		buildMenu: (menu: Menu) => void,
+	): HTMLDivElement {
+		const groupEl = document.createElement("div");
+		groupEl.className = "ofs-toolbar-split";
+
+		const mainButton = this.createIconButton(label, icon, onClick);
+		mainButton.classList.add("ofs-toolbar-split-main");
+
+		const menuButton = document.createElement("button");
+		menuButton.className = `clickable-icon ${TOOLBAR_BUTTON_CLASS} ofs-toolbar-split-trigger`;
+		menuButton.type = "button";
+		menuButton.setAttribute("aria-label", label);
+		setIcon(menuButton, "chevron-down");
+		setTooltip(menuButton, label);
+		menuButton.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+		});
+		menuButton.addEventListener("click", (event) => {
+			event.preventDefault();
+			const menu = new Menu();
+			buildMenu(menu);
+			const rect = menuButton.getBoundingClientRect();
+			menu.showAtPosition({ x: rect.left, y: rect.bottom + 4 });
+		});
+
+		groupEl.append(mainButton, menuButton);
+		return groupEl;
+	}
+
+	private createGroupSeparator(): HTMLSpanElement {
+		const separatorEl = document.createElement("span");
+		separatorEl.className = "ofs-toolbar-separator";
+		separatorEl.setAttribute("aria-hidden", "true");
+		return separatorEl;
+	}
+
+	private createButtonGroup(label: string, ...elements: HTMLElement[]): HTMLDivElement {
+		const groupEl = document.createElement("div");
+		groupEl.className = "ofs-toolbar-group";
+		groupEl.setAttribute("aria-label", label);
+		setTooltip(groupEl, label);
+		groupEl.append(...elements);
+		return groupEl;
 	}
 }

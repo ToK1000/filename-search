@@ -2,17 +2,30 @@ import { setIcon, TFile } from "obsidian";
 import ObsidianFilenameSearchPlugin from "../main";
 
 const VAULT_SVG_PREFIX = "vault-svg:";
+const EMOJI_PREFIX = "emoji:";
 
 export function createVaultSvgIconValue(path: string): string {
 	return `${VAULT_SVG_PREFIX}${path}`;
+}
+
+export function createEmojiIconValue(emoji: string): string {
+	return `${EMOJI_PREFIX}${emoji}`;
 }
 
 export function isVaultSvgIconValue(value: string | null): boolean {
 	return Boolean(value?.startsWith(VAULT_SVG_PREFIX));
 }
 
+export function isEmojiIconValue(value: string | null): boolean {
+	return Boolean(value?.startsWith(EMOJI_PREFIX));
+}
+
 export function getVaultSvgPath(value: string): string {
 	return value.slice(VAULT_SVG_PREFIX.length);
+}
+
+export function getEmojiValue(value: string): string {
+	return value.slice(EMOJI_PREFIX.length);
 }
 
 export function getStoredIconLabel(value: string | null): string | null {
@@ -22,6 +35,10 @@ export function getStoredIconLabel(value: string | null): string | null {
 
 	if (isVaultSvgIconValue(value)) {
 		return getVaultSvgPath(value);
+	}
+
+	if (isEmojiIconValue(value)) {
+		return getEmojiValue(value);
 	}
 
 	return value;
@@ -39,6 +56,12 @@ export async function renderStoredIcon(
 		if (fallbackIcon) {
 			setIcon(containerEl, fallbackIcon);
 		}
+		return;
+	}
+
+	if (isEmojiIconValue(value)) {
+		containerEl.setText(getEmojiValue(value));
+		containerEl.addClass("ofs-emoji-icon");
 		return;
 	}
 

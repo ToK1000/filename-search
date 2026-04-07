@@ -1,7 +1,7 @@
 import { TAbstractFile, TFile } from "obsidian";
 import ObsidianFilenameSearchPlugin from "../main";
 import { ExplorerItemStyleRule } from "../settings";
-import { createVaultSvgIconValue, isVaultSvgIconValue } from "./icon-renderer";
+import { createEmojiIconValue, createVaultSvgIconValue, isVaultSvgIconValue } from "./icon-renderer";
 
 export interface EffectiveExplorerStyle {
 	textColor: string | null;
@@ -121,7 +121,7 @@ function getStickerIconValue(
 		}
 	}
 
-	return normalizedValue;
+	return normalizeNonVaultStickerValue(normalizedValue);
 }
 
 function normalizeStickerValue(value: string): string {
@@ -132,4 +132,67 @@ function normalizeStickerValue(value: string): string {
 		.replace(/^\/+/, "");
 
 	return withoutVaultPrefix.trim();
+}
+
+function normalizeNonVaultStickerValue(value: string): string | null {
+	const emojiValue = tryNormalizeEmojiSticker(value);
+	if (emojiValue) {
+		return emojiValue;
+	}
+
+	const lucideValue = tryNormalizeLucideSticker(value);
+	if (lucideValue) {
+		return lucideValue;
+	}
+
+	return value;
+}
+
+function tryNormalizeEmojiSticker(value: string): string | null {
+	const match = value.match(/^emoji\/\/(.+)$/i);
+	if (!match) {
+		return null;
+	}
+
+	const rawCodepoints = match[1]?.trim();
+	if (!rawCodepoints) {
+		return null;
+	}
+
+	const codepoints = rawCodepoints
+		.split(/[-_\s]+/)
+		.map((part) => Number.parseInt(part, 16))
+		.filter((part) => Number.isFinite(part) && part > 0);
+	if (codepoints.length === 0) {
+		return null;
+	}
+
+	try {
+		return createEmojiIconValue(String.fromCodePoint(...codepoints));
+	} catch {
+		return null;
+	}
+}
+
+function tryNormalizeLucideSticker(value: string): string | null {
+	const prefixedMatch = value.match(/^lucide\/\/(.+)$/i);
+	if (prefixedMatch?.[1]) {
+		return normalizeLucideName(prefixedMatch[1]);
+	}
+
+	if (/^lucide-/i.test(value)) {
+		return normalizeLucideName(value);
+	}
+
+	return null;
+}
+
+function normalizeLucideName(value: string): string | null {
+	const normalized = value
+		.trim()
+		.replace(/^lucide\/\//i, "")
+		.replace(/^lucide-/i, "")
+		.trim();
+
+	return normalized.length > 0 ? normalized : null;
 }

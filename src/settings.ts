@@ -50,6 +50,7 @@ export interface FilenameSearchSettings {
 	colorHistory: ColorHistorySettings;
 	cleanup: CleanupSettings;
 	openFolderBrowserOnExplorerClick: boolean;
+	disableInternalLinkTargetHighlight: boolean;
 	useFrontmatterStickerIcons: boolean;
 	showPath: boolean;
 	showModifiedDate: boolean;
@@ -62,6 +63,7 @@ export const DEFAULT_SETTINGS: FilenameSearchSettings = {
 	colorHistory: createDefaultColorHistory(),
 	cleanup: createDefaultCleanupSettings(),
 	openFolderBrowserOnExplorerClick: true,
+	disableInternalLinkTargetHighlight: false,
 	useFrontmatterStickerIcons: true,
 	showPath: true,
 	showModifiedDate: true,
@@ -210,6 +212,15 @@ export class FilenameSearchSettingTab extends PluginSettingTab {
 			.addToggle((toggle) => {
 				toggle.setValue(this.plugin.settings.openFolderBrowserOnExplorerClick).onChange(async (value) => {
 					await this.plugin.updateSettings({ openFolderBrowserOnExplorerClick: value });
+				});
+			});
+
+		new Setting(containerEl)
+			.setName(strings.settingsDisableInternalLinkTargetHighlight)
+			.setDesc(strings.settingsDisableInternalLinkTargetHighlightDesc)
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.disableInternalLinkTargetHighlight).onChange(async (value) => {
+					await this.plugin.updateSettings({ disableInternalLinkTargetHighlight: value });
 				});
 			});
 

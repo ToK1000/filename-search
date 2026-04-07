@@ -1,8 +1,12 @@
-import { addIcon, Plugin, TFile } from "obsidian";
+import { addIcon, Editor, MarkdownView, Plugin, TFile } from "obsidian";
+import { adjustSelectedHeadingLevels } from "./features/adjust-heading-level";
+import { CalloutPickerModal } from "./features/callout-picker-modal";
 import { cleanupActiveMarkdownFile } from "./features/cleanup-empty-lines";
 import { ExplorerFolderStyleManager } from "./features/explorer-folder-styles";
 import { registerVaultPathContextMenu } from "./features/file-context-menu";
 import { ItemAppearanceModal } from "./features/item-appearance-modal";
+import { mergeSelectedCalloutsIntoColumns } from "./features/merge-callouts-columns";
+import { unwrapSelectedCallouts } from "./features/unwrap-callouts";
 import { ExplorerToolbarManager } from "./features/explorer-toolbar";
 import { buildFolderSizeTree, FolderSizeNode } from "./folders/folder-sizes";
 import { getStrings } from "./i18n";
@@ -27,8 +31,22 @@ import { FILE_NAME_SEARCH_VIEW_TYPE, FileNameSearchView } from "./ui/file-name-s
 const OPEN_SEARCH_COMMAND_ID = "open-file-name-search";
 const OPEN_FOLDER_BROWSER_COMMAND_ID = "open-folder-browser";
 const CLEANUP_EMPTY_LINES_COMMAND_ID = "cleanup-duplicate-empty-lines";
+const INSERT_CALLOUT_COMMAND_ID = "insert-callout-from-selection";
+const MERGE_CALLOUTS_COLUMNS_COMMAND_ID = "merge-callouts-into-columns";
+const UNWRAP_CALLOUTS_COMMAND_ID = "unwrap-selected-callouts";
+const PROMOTE_HEADINGS_COMMAND_ID = "promote-selected-headings";
+const DEMOTE_HEADINGS_COMMAND_ID = "demote-selected-headings";
+const GLOBAL_PINNED_STATE_KEY = "__global__";
 export const FILE_NAME_SEARCH_ICON = "ofs-file-search";
 export type SearchSidebarMode = "search" | "folder-sizes" | "pinned";
+
+type RememberedMarkdownSelection = {
+	filePath: string;
+	startLine: number;
+	endLine: number;
+	startCh: number;
+	endCh: number;
+};
 
 export default class ObsidianFilenameSearchPlugin extends Plugin {
 	private files: TFile[] = [];
@@ -36,6 +54,8 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 	private folderSizeTree: FolderSizeNode[] = [];
 	private totalVaultSizeBytes = 0;
 	private folderSizeCalculatedAt: number | null = null;
+	private rememberedMarkdownSelection: RememberedMarkdownSelection | null = null;
+	private lastMarkdownView: MarkdownView | null = null;
 	private explorerFolderStyleManager!: ExplorerFolderStyleManager;
 	private explorerToolbarManager!: ExplorerToolbarManager;
 	settings: FilenameSearchSettings = DEFAULT_SETTINGS;
@@ -78,6 +98,71 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 				void this.cleanupActiveMarkdown();
 			},
 		});
+		this.addCommand({
+			id: INSERT_CALLOUT_COMMAND_ID,
+			name: this.strings.commandInsertCallout,
+			editorCheckCallback: (checking, editor) => {
+				if (checking) {
+					const filePath = this.getPreferredMarkdownView()?.file?.path;
+					return editor.somethingSelected() || (filePath !== undefined && this.getRememberedMarkdownSelection(filePath) !== null);
+				}
+
+				this.openCalloutPicker(editor);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: MERGE_CALLOUTS_COLUMNS_COMMAND_ID,
+			name: this.strings.commandMergeCalloutsIntoColumns,
+			editorCheckCallback: (checking, editor) => {
+				if (checking) {
+					const filePath = this.getPreferredMarkdownView()?.file?.path;
+					return editor.somethingSelected() || (filePath !== undefined && this.getRememberedMarkdownSelection(filePath) !== null);
+				}
+
+				void this.mergeSelectedCalloutsIntoColumns(editor);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: UNWRAP_CALLOUTS_COMMAND_ID,
+			name: this.strings.commandUnwrapCallouts,
+			editorCheckCallback: (checking, editor) => {
+				if (checking) {
+					const filePath = this.getPreferredMarkdownView()?.file?.path;
+					return editor.somethingSelected() || (filePath !== undefined && this.getRememberedMarkdownSelection(filePath) !== null);
+				}
+
+				void this.unwrapSelectedCallouts(editor);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: PROMOTE_HEADINGS_COMMAND_ID,
+			name: this.strings.commandPromoteHeadings,
+			editorCheckCallback: (checking, editor) => {
+				if (checking) {
+					const filePath = this.getPreferredMarkdownView()?.file?.path;
+					return editor.somethingSelected() || (filePath !== undefined && this.getRememberedMarkdownSelection(filePath) !== null);
+				}
+
+				void this.promoteSelectedHeadings(editor);
+				return true;
+			},
+		});
+		this.addCommand({
+			id: DEMOTE_HEADINGS_COMMAND_ID,
+			name: this.strings.commandDemoteHeadings,
+			editorCheckCallback: (checking, editor) => {
+				if (checking) {
+					const filePath = this.getPreferredMarkdownView()?.file?.path;
+					return editor.somethingSelected() || (filePath !== undefined && this.getRememberedMarkdownSelection(filePath) !== null);
+				}
+
+				void this.demoteSelectedHeadings(editor);
+				return true;
+			},
+		});
 
 		this.addSettingTab(new FilenameSearchSettingTab(this.app, this));
 		registerVaultPathContextMenu(this);
@@ -91,6 +176,9 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
 				const view = leaf?.view;
+				if (view instanceof MarkdownView) {
+					this.lastMarkdownView = view;
+				}
 				if (view instanceof FileNameSearchView) {
 					view.focusInput();
 				}
@@ -112,7 +200,17 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 		);
 
 		this.registerDomEvent(document, "click", (event) => {
+			this.handleInternalLinkClick(event);
 			void this.handleExplorerFolderClick(event);
+		});
+		this.registerDomEvent(document, "mouseup", () => {
+			this.captureCurrentMarkdownSelection();
+		});
+		this.registerDomEvent(document, "keyup", () => {
+			this.captureCurrentMarkdownSelection();
+		});
+		this.registerDomEvent(document, "selectionchange", () => {
+			this.captureCurrentMarkdownSelection();
 		});
 
 		this.registerEvent(
@@ -139,6 +237,8 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 				this.refreshFiles();
 			}),
 		);
+
+		this.lastMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 	}
 
 	onunload() {
@@ -190,6 +290,26 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 		await cleanupActiveMarkdownFile(this);
 	}
 
+	openCalloutPicker(editor?: Editor) {
+		new CalloutPickerModal(this, editor).open();
+	}
+
+	async mergeSelectedCalloutsIntoColumns(editor?: Editor) {
+		await mergeSelectedCalloutsIntoColumns(this, editor);
+	}
+
+	async unwrapSelectedCallouts(editor?: Editor) {
+		await unwrapSelectedCallouts(this, editor);
+	}
+
+	async promoteSelectedHeadings(editor?: Editor) {
+		await adjustSelectedHeadingLevels(this, "up", editor);
+	}
+
+	async demoteSelectedHeadings(editor?: Editor) {
+		await adjustSelectedHeadingLevels(this, "down", editor);
+	}
+
 	async openFolderBrowser(folderPath: string) {
 		const existingLeaf = this.app.workspace.getLeavesOfType(FOLDER_BROWSER_VIEW_TYPE)[0];
 		const leaf = existingLeaf ?? this.app.workspace.getLeaf("tab");
@@ -224,6 +344,18 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 
 	getFolderSizeCalculatedAt(): number | null {
 		return this.folderSizeCalculatedAt;
+	}
+
+	getRememberedMarkdownSelection(filePath: string): RememberedMarkdownSelection | null {
+		if (this.rememberedMarkdownSelection?.filePath !== filePath) {
+			return null;
+		}
+
+		return this.rememberedMarkdownSelection;
+	}
+
+	getPreferredMarkdownView(): MarkdownView | null {
+		return this.app.workspace.getActiveViewOfType(MarkdownView) ?? this.lastMarkdownView;
 	}
 
 	calculateFolderSizes() {
@@ -381,6 +513,14 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 		return this.getFolderViewState(folderPath).pinnedPaths.includes(itemPath);
 	}
 
+	async togglePinnedGlobally(itemPath: string) {
+		await this.togglePinnedInFolder(GLOBAL_PINNED_STATE_KEY, itemPath);
+	}
+
+	isPinnedGlobally(itemPath: string): boolean {
+		return this.isPinnedInFolder(GLOBAL_PINNED_STATE_KEY, itemPath);
+	}
+
 	async removePinnedEverywhere(itemPath: string) {
 		const nextFolderViewStates: typeof this.settings.folderViewStates = {};
 		let changed = false;
@@ -504,8 +644,11 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 			colorHistory: normalizeColorHistory(loadedData?.colorHistory),
 			cleanup: normalizeCleanupSettings(loadedData?.cleanup),
 			openFolderBrowserOnExplorerClick: loadedData?.openFolderBrowserOnExplorerClick ?? DEFAULT_SETTINGS.openFolderBrowserOnExplorerClick,
+			disableInternalLinkTargetHighlight:
+				loadedData?.disableInternalLinkTargetHighlight ?? DEFAULT_SETTINGS.disableInternalLinkTargetHighlight,
 			useFrontmatterStickerIcons: loadedData?.useFrontmatterStickerIcons ?? DEFAULT_SETTINGS.useFrontmatterStickerIcons,
-			showPath: loadedData?.showPath ?? true,
+			showPath: loadedData?.showPath ?? DEFAULT_SETTINGS.showPath,
+			showModifiedDate: loadedData?.showModifiedDate ?? DEFAULT_SETTINGS.showModifiedDate,
 		};
 	}
 
@@ -556,6 +699,88 @@ export default class ObsidianFilenameSearchPlugin extends Plugin {
 		window.setTimeout(() => {
 			void this.openFolderBrowser(path ?? "");
 		}, 0);
+	}
+
+	private handleInternalLinkClick(event: MouseEvent) {
+		if (!this.settings.disableInternalLinkTargetHighlight) {
+			return;
+		}
+
+		if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+			return;
+		}
+
+		const target = event.target;
+		if (!(target instanceof HTMLElement)) {
+			return;
+		}
+
+		const linkEl = target.closest(".internal-link");
+		if (!(linkEl instanceof HTMLElement)) {
+			return;
+		}
+
+		const targetRef =
+			linkEl.getAttribute("data-href") ??
+			linkEl.getAttribute("href") ??
+			linkEl.getAttribute("aria-label") ??
+			"";
+		if (!targetRef.includes("#")) {
+			return;
+		}
+
+		for (const delay of [32, 96, 192, 384, 768]) {
+			window.setTimeout(() => {
+				this.clearFlashingTargets();
+				this.clearLivePreviewSelection();
+			}, delay);
+		}
+	}
+
+	private clearFlashingTargets() {
+		for (const flashingEl of Array.from(document.querySelectorAll<HTMLElement>(".is-flashing"))) {
+			flashingEl.classList.remove("is-flashing");
+		}
+	}
+
+	private captureCurrentMarkdownSelection() {
+		const markdownView = this.getPreferredMarkdownView();
+		const filePath = markdownView?.file?.path;
+		const editor = markdownView?.editor;
+		if (!filePath || !editor) {
+			return;
+		}
+
+		const selectionText = editor.getSelection();
+		if (!selectionText.trim()) {
+			return;
+		}
+
+		const from = editor.getCursor("from");
+		const to = editor.getCursor("to");
+		this.rememberedMarkdownSelection = {
+			filePath,
+			startLine: Math.min(from.line, to.line),
+			endLine: Math.max(from.line, to.line),
+			startCh: from.line < to.line || (from.line === to.line && from.ch <= to.ch) ? from.ch : to.ch,
+			endCh: from.line > to.line || (from.line === to.line && from.ch > to.ch) ? from.ch : to.ch,
+		};
+	}
+
+	private clearLivePreviewSelection() {
+		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const editor = markdownView?.editor;
+		if (!editor) {
+			return;
+		}
+
+		const from = editor.getCursor("from");
+		const to = editor.getCursor("to");
+		if (from.line === to.line && from.ch === to.ch) {
+			return;
+		}
+
+		editor.setCursor(from);
 	}
 
 	private async handlePathRename(newPath: string, oldPath: string) {
@@ -611,11 +836,6 @@ function getNormalizedExplorerRules(loadedData: Partial<FilenameSearchSettings> 
 	const currentRules = (loadedData?.explorerStyleRules ?? []).map((rule) =>
 		normalizeExplorerItemStyleRule(rule),
 	);
-
-	if (currentRules.length > 0) {
-		return currentRules;
-	}
-
 	const legacyRules = ((loadedData as { folderColorRules?: Array<Record<string, unknown>> } | null)?.folderColorRules ?? [])
 		.map((rule) => normalizeExplorerItemStyleRule({
 			path: typeof rule.folderPath === "string" ? rule.folderPath : "",
@@ -629,5 +849,13 @@ function getNormalizedExplorerRules(loadedData: Partial<FilenameSearchSettings> 
 		}))
 		.filter((rule) => rule.path.length > 0);
 
-	return legacyRules;
+	const mergedRules = new Map<string, ExplorerItemStyleRule>();
+	for (const rule of legacyRules) {
+		mergedRules.set(rule.path, rule);
+	}
+	for (const rule of currentRules) {
+		mergedRules.set(rule.path, rule);
+	}
+
+	return [...mergedRules.values()];
 }

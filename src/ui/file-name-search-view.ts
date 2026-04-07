@@ -1,4 +1,5 @@
-import { ItemView, Keymap, setIcon, setTooltip, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, Keymap, Menu, setIcon, setTooltip, TFile, WorkspaceLeaf } from "obsidian";
+import { CALLOUT_TOOLBAR_ICON } from "../features/callout-tool";
 import { FolderSizeNode, formatFolderSize } from "../folders/folder-sizes";
 import { getEffectiveItemIconValue, getEffectiveStyle } from "../features/item-icon-source";
 import { renderStoredIcon } from "../features/icon-renderer";
@@ -91,12 +92,93 @@ export class FileNameSearchView extends ItemView {
 		this.headingEl = contentEl.createEl("h2");
 		this.descriptionEl = contentEl.createDiv({ cls: "ofs-description" });
 		this.modeSwitcherEl = contentEl.createDiv({ cls: "ofs-explorer-toolbar ofs-tab-toolbar" });
-		this.createModeButton(this.plugin.strings.explorerToolbarOpenSearch, "search", FILE_NAME_SEARCH_ICON);
-		this.createModeButton(this.plugin.strings.explorerToolbarOpenFolderSizes, "folder-sizes", "folder-open");
-		this.createModeButton(this.plugin.strings.explorerToolbarOpenPinned, "pinned", "pin");
-		this.createActionButton(this.plugin.strings.explorerToolbarCleanupEmptyLines, "eraser", () => {
+		const searchButton = this.createSplitButton(this.plugin.strings.explorerToolbarOpenSearch, FILE_NAME_SEARCH_ICON, () => {
+			void this.plugin.activateSearchView("search");
+		}, (menu) => {
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandOpenSearch)
+					.setIcon(FILE_NAME_SEARCH_ICON)
+					.onClick(() => {
+						void this.plugin.activateSearchView("search");
+					}),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.explorerToolbarOpenFolderSizes)
+					.setIcon("folder-open")
+					.onClick(() => {
+						void this.plugin.activateFolderSizesView();
+					}),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.explorerToolbarOpenPinned)
+					.setIcon("pin")
+					.onClick(() => {
+						void this.plugin.activatePinnedItemsView();
+					}),
+			);
+		}, ["ofs-tab-toolbar-button"], "search-family");
+		const cleanupButton = this.createSplitButton(this.plugin.strings.explorerToolbarCleanupEmptyLines, "eraser", () => {
 			void this.plugin.cleanupActiveMarkdown();
+		}, (menu) => {
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandCleanupEmptyLines)
+					.setIcon("eraser")
+					.onClick(() => {
+						void this.plugin.cleanupActiveMarkdown();
+					}),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandDemoteHeadings)
+					.setIcon("indent-increase")
+					.onClick(() => {
+						void this.plugin.demoteSelectedHeadings();
+					}),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandPromoteHeadings)
+					.setIcon("indent-decrease")
+					.onClick(() => {
+						void this.plugin.promoteSelectedHeadings();
+					}),
+			);
 		});
+		const calloutButton = this.createSplitButton(this.plugin.strings.explorerToolbarInsertCallout, CALLOUT_TOOLBAR_ICON, () => {
+			this.plugin.openCalloutPicker();
+		}, (menu) => {
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandInsertCallout)
+					.setIcon(CALLOUT_TOOLBAR_ICON)
+					.onClick(() => this.plugin.openCalloutPicker()),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandMergeCalloutsIntoColumns)
+					.setIcon("columns-2")
+					.onClick(() => {
+						void this.plugin.mergeSelectedCalloutsIntoColumns();
+					}),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle(this.plugin.strings.commandUnwrapCallouts)
+					.setIcon("remove-formatting")
+					.onClick(() => {
+						void this.plugin.unwrapSelectedCallouts();
+					}),
+			);
+		});
+		this.createButtonGroup(this.plugin.strings.explorerToolbarGroupSearch, searchButton);
+		this.createGroupSeparator();
+		this.createButtonGroup(this.plugin.strings.explorerToolbarGroupFormatting, cleanupButton);
+		this.createGroupSeparator();
+		this.createButtonGroup(this.plugin.strings.explorerToolbarGroupCallouts, calloutButton);
 
 		this.inputEl = contentEl.createEl("input", {
 			type: "text",
@@ -197,6 +279,7 @@ export class FileNameSearchView extends ItemView {
 		);
 
 		visibleResults.forEach((file, index) => {
+			const isPinned = this.plugin.isPinnedGlobally(file.path);
 			const row = this.resultsEl.createDiv({
 				cls: `ofs-result-item${index === this.selectedIndex ? " is-selected" : ""}`,
 				title: this.plugin.strings.resultTooltip,
@@ -209,6 +292,11 @@ export class FileNameSearchView extends ItemView {
 				cls: "ofs-result-name",
 			});
 
+			if (this.plugin.settings.showModifiedDate) {
+				const meta = main.createDiv({ cls: "ofs-result-meta" });
+				meta.setText(this.plugin.strings.modifiedLabel(formatDate(file.stat.mtime)));
+			}
+
 			if (this.plugin.settings.showPath) {
 				main.createDiv({
 					text: file.path,
@@ -216,16 +304,33 @@ export class FileNameSearchView extends ItemView {
 				});
 			}
 
-			if (this.plugin.settings.showModifiedDate) {
-				const meta = row.createDiv({ cls: "ofs-result-meta" });
-				meta.setText(this.plugin.strings.modifiedLabel(formatDate(file.stat.mtime)));
-			}
+			const pinButton = row.createEl("button", {
+				cls: `ofs-result-pin clickable-icon${isPinned ? " is-active" : ""}`,
+				attr: {
+					type: "button",
+					"aria-label": isPinned ? this.plugin.strings.searchResultUnpin : this.plugin.strings.searchResultPin,
+				},
+			});
+			setIcon(pinButton, "pin");
+			setTooltip(pinButton, isPinned ? this.plugin.strings.searchResultUnpin : this.plugin.strings.searchResultPin);
+			pinButton.addEventListener("mousedown", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+			});
+			pinButton.addEventListener("click", (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				void this.plugin.togglePinnedGlobally(file.path);
+			});
 
 			row.addEventListener("mouseenter", () => {
 				this.setSelectedIndex(index);
 			});
 
 			row.addEventListener("mousedown", (event) => {
+				if ((event.target as HTMLElement | null)?.closest(".ofs-result-pin")) {
+					return;
+				}
 				event.preventDefault();
 				this.setSelectedIndex(index);
 				void this.openFile(file, event);
@@ -404,14 +509,16 @@ export class FileNameSearchView extends ItemView {
 		this.renderFolderSizes();
 	}
 
-	private createModeButton(label: string, mode: SearchSidebarMode, icon: string) {
-		const buttonEl = this.modeSwitcherEl.createEl("button", {
-			cls: ["clickable-icon", "ofs-explorer-toolbar-button", "ofs-tab-toolbar-button"],
-			attr: { type: "button" },
-		});
+	private createModeButton(label: string, mode: SearchSidebarMode, icon: string): HTMLButtonElement {
+		const buttonEl = document.createElement("button");
+		buttonEl.addClasses(["clickable-icon", "ofs-explorer-toolbar-button", "ofs-tab-toolbar-button"]);
+		buttonEl.type = "button";
 		setIcon(buttonEl, icon);
 		buttonEl.setAttribute("aria-label", label);
 		buttonEl.setAttribute("title", label);
+		buttonEl.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+		});
 		buttonEl.addEventListener("click", () => {
 			if (mode === "folder-sizes") {
 				void this.plugin.activateFolderSizesView();
@@ -425,23 +532,86 @@ export class FileNameSearchView extends ItemView {
 
 			void this.plugin.activateSearchView(mode);
 		});
+		return buttonEl;
 	}
 
 	private updateModeUi() {
-		this.modeSwitcherEl.querySelectorAll<HTMLButtonElement>(".ofs-tab-toolbar-button").forEach((buttonEl, index) => {
-			const buttonMode: SearchSidebarMode = index === 0 ? "search" : index === 1 ? "folder-sizes" : "pinned";
-			buttonEl.toggleClass("is-active", buttonMode === this.mode);
-			buttonEl.toggleClass("mod-cta", buttonMode === this.mode);
+		this.modeSwitcherEl.querySelectorAll<HTMLButtonElement>(".ofs-tab-toolbar-button").forEach((buttonEl) => {
+			const isActive = buttonEl.dataset.modeGroup === "search-family"
+				&& (this.mode === "search" || this.mode === "folder-sizes" || this.mode === "pinned");
+			buttonEl.toggleClass("is-active", isActive);
+			buttonEl.toggleClass("mod-cta", isActive);
 		});
 	}
 
-	private createActionButton(label: string, icon: string, onClick: () => void) {
-		const buttonEl = this.modeSwitcherEl.createEl("button", {
-			cls: ["clickable-icon", "ofs-explorer-toolbar-button"],
-			attr: { type: "button", "aria-label": label, title: label },
-		});
+	private createActionButton(label: string, icon: string, onClick: () => void): HTMLButtonElement {
+		const buttonEl = document.createElement("button");
+		buttonEl.addClasses(["clickable-icon", "ofs-explorer-toolbar-button"]);
+		buttonEl.type = "button";
+		buttonEl.setAttribute("aria-label", label);
+		buttonEl.setAttribute("title", label);
 		setIcon(buttonEl, icon);
+		buttonEl.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+		});
 		buttonEl.addEventListener("click", onClick);
+		return buttonEl;
+	}
+
+	private createSplitButton(
+		label: string,
+		icon: string,
+		onClick: () => void,
+		buildMenu: (menu: Menu) => void,
+		mainButtonClasses: string[] = [],
+		modeGroup?: string,
+	): HTMLDivElement {
+		const groupEl = document.createElement("div");
+		groupEl.className = "ofs-toolbar-split";
+		const mainButton = document.createElement("button");
+		mainButton.addClasses(["clickable-icon", "ofs-explorer-toolbar-button", "ofs-toolbar-split-main", ...mainButtonClasses]);
+		mainButton.type = "button";
+		mainButton.setAttribute("aria-label", label);
+		mainButton.setAttribute("title", label);
+		if (modeGroup) {
+			mainButton.dataset.modeGroup = modeGroup;
+		}
+		setIcon(mainButton, icon);
+		mainButton.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+		});
+		mainButton.addEventListener("click", onClick);
+
+		const menuButton = document.createElement("button");
+		menuButton.addClasses(["clickable-icon", "ofs-explorer-toolbar-button", "ofs-toolbar-split-trigger"]);
+		menuButton.type = "button";
+		menuButton.setAttribute("aria-label", label);
+		menuButton.setAttribute("title", label);
+		setIcon(menuButton, "chevron-down");
+		menuButton.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+		});
+		menuButton.addEventListener("click", (event) => {
+			event.preventDefault();
+			const menu = new Menu();
+			buildMenu(menu);
+			const rect = menuButton.getBoundingClientRect();
+			menu.showAtPosition({ x: rect.left, y: rect.bottom + 4 });
+		});
+		groupEl.append(mainButton, menuButton);
+		return groupEl;
+	}
+
+	private createGroupSeparator() {
+		const separatorEl = this.modeSwitcherEl.createSpan({ cls: "ofs-toolbar-separator" });
+		separatorEl.setAttribute("aria-hidden", "true");
+	}
+
+	private createButtonGroup(label: string, ...elements: HTMLElement[]) {
+		const groupEl = this.modeSwitcherEl.createDiv({ cls: "ofs-toolbar-group" });
+		groupEl.setAttribute("aria-label", label);
+		setTooltip(groupEl, label);
+		groupEl.append(...elements);
 	}
 
 	private moveSelection(offset: number) {

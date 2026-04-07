@@ -12,24 +12,50 @@ const ICON_COLOR_VARIABLE = "--ofs-folder-icon-color";
 const ICON_BACKGROUND_COLOR_VARIABLE = "--ofs-folder-icon-background-color";
 
 export class ExplorerFolderStyleManager extends Component {
+	private refreshTimeouts = new Set<number>();
+
 	constructor(private readonly plugin: ObsidianFilenameSearchPlugin) {
 		super();
 	}
 
 	refresh() {
-		const explorerLeaves = this.plugin.app.workspace.getLeavesOfType(FILE_EXPLORER_VIEW_TYPE);
-
-		for (const leaf of explorerLeaves) {
-			this.applyStylesToLeaf(leaf);
-		}
+		this.runRefreshPass();
+		this.scheduleRefreshPasses();
 	}
 
 	destroy() {
+		this.clearScheduledRefreshes();
+
 		for (const leaf of this.plugin.app.workspace.getLeavesOfType(FILE_EXPLORER_VIEW_TYPE)) {
 			this.clearStyles(leaf.view.containerEl);
 		}
 
 		this.unload();
+	}
+
+	private runRefreshPass() {
+		const explorerLeaves = this.plugin.app.workspace.getLeavesOfType(FILE_EXPLORER_VIEW_TYPE);
+		for (const leaf of explorerLeaves) {
+			this.applyStylesToLeaf(leaf);
+		}
+	}
+
+	private scheduleRefreshPasses() {
+		this.clearScheduledRefreshes();
+		for (const delay of [120, 360, 900]) {
+			const timeoutId = window.setTimeout(() => {
+				this.refreshTimeouts.delete(timeoutId);
+				this.runRefreshPass();
+			}, delay);
+			this.refreshTimeouts.add(timeoutId);
+		}
+	}
+
+	private clearScheduledRefreshes() {
+		for (const timeoutId of this.refreshTimeouts) {
+			window.clearTimeout(timeoutId);
+		}
+		this.refreshTimeouts.clear();
 	}
 
 	private applyStylesToLeaf(leaf: WorkspaceLeaf) {
@@ -101,20 +127,36 @@ export class ExplorerFolderStyleManager extends Component {
 		path: string;
 		contentSelector: string;
 	}> {
-		const folderCandidates = Array.from(containerEl.querySelectorAll<HTMLElement>(".nav-folder-title[data-path]"))
-			.map((element) => ({
-				element,
-				path: element.dataset.path ?? "",
-				contentSelector: ".nav-folder-title-content",
-			}));
-		const fileCandidates = Array.from(containerEl.querySelectorAll<HTMLElement>(".nav-file-title[data-path]"))
-			.map((element) => ({
-				element,
-				path: element.dataset.path ?? "",
-				contentSelector: ".nav-file-title-content",
-			}));
+		const candidates: Array<{
+			element: HTMLElement;
+			path: string;
+			contentSelector: string;
+		}> = [];
+		const seenElements = new Set<HTMLElement>();
 
-		return [...folderCandidates, ...fileCandidates];
+		const addCandidates = (selector: string, contentSelector: string) => {
+			for (const element of Array.from(containerEl.querySelectorAll<HTMLElement>(selector))) {
+				if (seenElements.has(element)) {
+					continue;
+				}
+				seenElements.add(element);
+				candidates.push({
+					element,
+					path: element.dataset.path ?? "",
+					contentSelector,
+				});
+			}
+		};
+
+		addCandidates(".nav-folder-title[data-path]", ".nav-folder-title-content");
+		addCandidates(".nav-file-title[data-path]", ".nav-file-title-content");
+
+		// Some Obsidian versions/themes wrap the explorer row differently. Fall back to
+		// generic tree rows when the more specific selectors are not present or incomplete.
+		addCandidates(".tree-item-self[data-path]:has(.nav-folder-title-content)", ".nav-folder-title-content");
+		addCandidates(".tree-item-self[data-path]:has(.nav-file-title-content)", ".nav-file-title-content");
+
+		return candidates;
 	}
 
 	private async applyIcon(candidateEl: HTMLElement, contentSelector: string, iconName: string) {

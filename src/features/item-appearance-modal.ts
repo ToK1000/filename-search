@@ -1,5 +1,6 @@
 import { Modal, setTooltip, TAbstractFile, TFolder } from "obsidian";
 import { getFilteredIcons, getInitialIconSearchValue, ICON_CATEGORY_OPTIONS } from "./icon-picker";
+import { getEffectiveStyle } from "./item-icon-source";
 import { getStoredIconLabel, renderStoredIcon } from "./icon-renderer";
 import ObsidianFilenameSearchPlugin from "../main";
 import {
@@ -48,6 +49,7 @@ export class ItemAppearanceModal extends Modal {
 			itemType: item instanceof TFolder ? "folder" : "file",
 		});
 		this.draft.itemType = item instanceof TFolder ? "folder" : "file";
+		this.applyInitialColorDefaults();
 		this.iconSearch = getInitialIconSearchValue(this.draft.iconName);
 	}
 
@@ -268,15 +270,18 @@ export class ItemAppearanceModal extends Modal {
 		fieldEl.createDiv({ text: config.description, cls: "ofs-item-appearance-help" });
 
 		const controlsEl = fieldEl.createDiv({ cls: "ofs-item-appearance-color-controls" });
+		const currentValueSwatch = controlsEl.createDiv({ cls: "ofs-item-appearance-current-color" });
 		const colorInput = controlsEl.createEl("input", {
 			type: "color",
 			cls: "ofs-item-appearance-color-input",
 		});
 		colorInput.value = config.getValue() ?? config.fallbackColor;
+		this.updateColorControlState(colorInput, currentValueSwatch, config.getValue());
 		const applySelectedColor = () => {
 			const value = colorInput.value;
 			config.setValue(value);
 			void this.plugin.rememberColor(config.category, value);
+			this.updateColorControlState(colorInput, currentValueSwatch, value);
 			void this.renderPreview();
 			this.renderColorHistory(fieldEl, config, colorInput);
 		};
@@ -289,12 +294,60 @@ export class ItemAppearanceModal extends Modal {
 		});
 		noneButton.addEventListener("click", () => {
 			config.setValue(null);
+			this.updateColorControlState(colorInput, currentValueSwatch, null);
 			void this.renderPreview();
 			colorInput.value = config.fallbackColor;
 			this.renderColorHistory(fieldEl, config, colorInput);
 		});
 
 		this.renderColorHistory(fieldEl, config, colorInput);
+	}
+
+	private applyInitialColorDefaults() {
+		const effectiveStyle = getEffectiveStyle(this.plugin.settings.explorerStyleRules, this.item.path);
+		this.draft.textColor = this.resolveInitialColor("text", this.draft.textColor, effectiveStyle?.textColor ?? null);
+		this.draft.backgroundColor = this.resolveInitialColor("background", this.draft.backgroundColor, effectiveStyle?.backgroundColor ?? null);
+		this.draft.iconColor = this.resolveInitialColor("icon", this.draft.iconColor, effectiveStyle?.iconColor ?? null);
+		this.draft.iconBackgroundColor = this.resolveInitialColor(
+			"iconBackground",
+			this.draft.iconBackgroundColor,
+			effectiveStyle?.iconBackgroundColor ?? null,
+		);
+	}
+
+	private resolveInitialColor(
+		_category: ColorHistoryCategory,
+		currentValue: string | null,
+		effectiveValue: string | null,
+	): string | null {
+		if (currentValue) {
+			return currentValue;
+		}
+
+		if (effectiveValue) {
+			return effectiveValue;
+		}
+
+		return null;
+	}
+
+	private updateColorControlState(
+		colorInput: HTMLInputElement,
+		currentValueSwatch: HTMLDivElement,
+		value: string | null,
+	) {
+		const isUnset = value === null;
+		colorInput.toggleClass("is-unset", isUnset);
+		currentValueSwatch.toggleClass("is-unset", isUnset);
+		currentValueSwatch.style.background = isUnset ? "" : value;
+		currentValueSwatch.setAttribute(
+			"aria-label",
+			isUnset ? this.plugin.strings.colorNone : value,
+		);
+		currentValueSwatch.setAttribute(
+			"title",
+			isUnset ? this.plugin.strings.colorNone : value,
+		);
 	}
 
 	private renderColorHistory(

@@ -2,10 +2,23 @@ export interface I18nStrings {
 	commandOpenSearch: string;
 	commandOpenFolderBrowser: string;
 	commandCleanupEmptyLines: string;
+	commandInsertCallout: string;
+	commandMergeCalloutsIntoColumns: string;
+	commandUnwrapCallouts: string;
+	commandPromoteHeadings: string;
+	commandDemoteHeadings: string;
 	explorerToolbarOpenSearch: string;
 	explorerToolbarOpenFolderSizes: string;
 	explorerToolbarOpenPinned: string;
 	explorerToolbarCleanupEmptyLines: string;
+	explorerToolbarInsertCallout: string;
+	explorerToolbarMergeCalloutsIntoColumns: string;
+	explorerToolbarPromoteHeadings: string;
+	explorerToolbarDemoteHeadings: string;
+	explorerToolbarGroupSearch: string;
+	explorerToolbarGroupStructure: string;
+	explorerToolbarGroupFormatting: string;
+	explorerToolbarGroupCallouts: string;
 	contextMenuCopyPath: string;
 	contextMenuCopyPaths: string;
 	contextMenuOpenFolderBrowser: string;
@@ -15,6 +28,38 @@ export interface I18nStrings {
 	cleanupSuccess: string;
 	cleanupNoChanges: string;
 	cleanupNoActiveMarkdown: string;
+	calloutNoActiveMarkdown: string;
+	calloutNoSelection: string;
+	calloutInserted: (calloutId: string) => string;
+	calloutColumnsNoActiveMarkdown: string;
+	calloutColumnsNoSelection: string;
+	calloutColumnsNeedTwo: string;
+	calloutColumnsMerged: (count: number) => string;
+	calloutUnwrapNoActiveMarkdown: string;
+	calloutUnwrapNoSelection: string;
+	calloutUnwrapNoCalloutsFound: string;
+	calloutUnwrapped: (count: number) => string;
+	calloutModalTitle: string;
+	calloutSearchLabel: string;
+	calloutSearchDesc: string;
+	calloutSearchPlaceholder: string;
+	calloutTitleLabel: string;
+	calloutTitleDesc: string;
+	calloutTitlePlaceholder: string;
+	calloutPreviewLabel: string;
+	calloutPreviewDesc: string;
+	calloutPreviewBody: string;
+	calloutInsertButton: string;
+	calloutNoMatches: string;
+	calloutCustomDescription: string;
+	calloutManagedDescription: string;
+	calloutSourceBuiltIn: string;
+	calloutSourceManager: string;
+	headingAdjustNoActiveMarkdown: string;
+	headingAdjustNoSelection: string;
+	headingAdjustNoHeadingsFound: string;
+	headingAdjustPromoted: (count: number) => string;
+	headingAdjustDemoted: (count: number) => string;
 	contextMenuSelectIconAndColor: string;
 	itemAppearanceIconHeading: string;
 	itemAppearanceColorsHeading: string;
@@ -66,6 +111,8 @@ export interface I18nStrings {
 	pinnedSummary: (count: number) => string;
 	pinnedEmpty: string;
 	pinnedRemove: string;
+	searchResultPin: string;
+	searchResultUnpin: string;
 	folderBrowserHeading: string;
 	folderBrowserDescription: string;
 	folderBrowserSortLabel: string;
@@ -113,6 +160,8 @@ export interface I18nStrings {
 	settingsShowModifiedDateDesc: string;
 	settingsOpenFolderBrowserOnExplorerClick: string;
 	settingsOpenFolderBrowserOnExplorerClickDesc: string;
+	settingsDisableInternalLinkTargetHighlight: string;
+	settingsDisableInternalLinkTargetHighlightDesc: string;
 	settingsUseFrontmatterStickerIcons: string;
 	settingsUseFrontmatterStickerIconsDesc: string;
 	settingsCleanupHeading: string;
@@ -166,10 +215,23 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		commandOpenSearch: "Open file name search",
 		commandOpenFolderBrowser: "Open folder browser",
 		commandCleanupEmptyLines: "Clean duplicate empty lines in active note",
+		commandInsertCallout: "Wrap selection in a callout",
+		commandMergeCalloutsIntoColumns: "Merge selected callouts into columns",
+		commandUnwrapCallouts: "Remove callouts from selection",
+		commandPromoteHeadings: "Promote headings in selection",
+		commandDemoteHeadings: "Demote headings in selection",
 		explorerToolbarOpenSearch: "Open the filename search view",
 		explorerToolbarOpenFolderSizes: "Calculate and show folder sizes",
 		explorerToolbarOpenPinned: "Show all pinned files",
 		explorerToolbarCleanupEmptyLines: "Clean duplicate empty lines in the current note",
+		explorerToolbarInsertCallout: "Wrap the selected text in a callout",
+		explorerToolbarMergeCalloutsIntoColumns: "Merge selected callouts into columns",
+		explorerToolbarPromoteHeadings: "Move selected headings one level up",
+		explorerToolbarDemoteHeadings: "Move selected headings one level down",
+		explorerToolbarGroupSearch: "Search",
+		explorerToolbarGroupStructure: "Structure",
+		explorerToolbarGroupFormatting: "Formatting",
+		explorerToolbarGroupCallouts: "Callouts",
 		contextMenuCopyPath: "Copy vault-relative path",
 		contextMenuCopyPaths: "Copy vault-relative paths",
 		contextMenuOpenFolderBrowser: "Open in folder browser",
@@ -179,6 +241,38 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		cleanupSuccess: "Duplicate empty lines cleaned.",
 		cleanupNoChanges: "No duplicate empty lines found.",
 		cleanupNoActiveMarkdown: "No active markdown file found.",
+		calloutNoActiveMarkdown: "No active markdown editor found.",
+		calloutNoSelection: "Select the text that should be wrapped in a callout.",
+		calloutInserted: (calloutId: string) => `Inserted ${calloutId} callout.`,
+		calloutColumnsNoActiveMarkdown: "No active markdown editor found.",
+		calloutColumnsNoSelection: "Select the existing callouts that should be merged into columns.",
+		calloutColumnsNeedTwo: "Select at least two complete callouts to merge them into columns.",
+		calloutColumnsMerged: (count: number) => `Merged ${count} callouts into columns.`,
+		calloutUnwrapNoActiveMarkdown: "No active markdown editor found.",
+		calloutUnwrapNoSelection: "Select the callouts that should be converted back to plain text.",
+		calloutUnwrapNoCalloutsFound: "No complete callouts were found in the selected text.",
+		calloutUnwrapped: (count: number) => `Converted ${count} callout${count === 1 ? "" : "s"} back to plain text.`,
+		calloutModalTitle: "Insert callout",
+		calloutSearchLabel: "Search callouts",
+		calloutSearchDesc: "Filter the available callout types by name or meaning.",
+		calloutSearchPlaceholder: "note, warning, tip, question",
+		calloutTitleLabel: "Optional title",
+		calloutTitleDesc: "Leave empty to use the default callout title.",
+		calloutTitlePlaceholder: "Custom title",
+		calloutPreviewLabel: "Preview",
+		calloutPreviewDesc: "Choose the callout style that best matches the selected text.",
+		calloutPreviewBody: "Selected text will be wrapped in this callout style.",
+		calloutInsertButton: "Insert callout",
+		calloutNoMatches: "No callouts match this search.",
+		calloutCustomDescription: "Custom callout from Callout Manager.",
+		calloutManagedDescription: "Callout detected from Callout Manager settings.",
+		calloutSourceBuiltIn: "Built-in",
+		calloutSourceManager: "Callout Manager",
+		headingAdjustNoActiveMarkdown: "No active markdown editor found.",
+		headingAdjustNoSelection: "Select the text range whose headings should be changed.",
+		headingAdjustNoHeadingsFound: "No Markdown headings found in the selected text.",
+		headingAdjustPromoted: (count: number) => `Moved ${count} heading${count === 1 ? "" : "s"} up by one level.`,
+		headingAdjustDemoted: (count: number) => `Moved ${count} heading${count === 1 ? "" : "s"} down by one level.`,
 		contextMenuSelectIconAndColor: "Select icon and color",
 		itemAppearanceIconHeading: "Icon",
 		itemAppearanceColorsHeading: "Colors",
@@ -230,6 +324,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedSummary: (count: number) => `${count} pinned file${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "No pinned files yet.",
 		pinnedRemove: "Remove pinned status",
+		searchResultPin: "Pin this file",
+		searchResultUnpin: "Remove pinned status",
 		folderBrowserHeading: "Folder browser",
 		folderBrowserDescription: "Shows folders, notes, images, and files as cards in the main area.",
 		folderBrowserSortLabel: "Sort",
@@ -277,6 +373,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsShowModifiedDateDesc: "Display the last modified date in each search result.",
 		settingsOpenFolderBrowserOnExplorerClick: "Open folder browser from explorer click",
 		settingsOpenFolderBrowserOnExplorerClickDesc: "When enabled, clicking a folder row in the explorer still expands it and also opens that folder in the main folder browser view.",
+		settingsDisableInternalLinkTargetHighlight: "Disable section highlight after internal links",
+		settingsDisableInternalLinkTargetHighlightDesc: "Removes the temporary highlight that Obsidian shows after following an internal link to a heading or block.",
 		settingsUseFrontmatterStickerIcons: "Use frontmatter sticker icons",
 		settingsUseFrontmatterStickerIconsDesc: "Use the frontmatter field `sticker` as a fallback file icon when no plugin icon is set. Supports icon names and vault SVG paths.",
 		settingsCleanupHeading: "AI paste cleanup",
@@ -328,10 +426,23 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		commandOpenSearch: "Dateinamensuche öffnen",
 		commandOpenFolderBrowser: "Ordneransicht öffnen",
 		commandCleanupEmptyLines: "Doppelte Leerzeilen in aktiver Notiz bereinigen",
+		commandInsertCallout: "Auswahl in ein Callout umwandeln",
+		commandMergeCalloutsIntoColumns: "Markierte Callouts in Spalten zusammenführen",
+		commandUnwrapCallouts: "Callouts aus Auswahl entfernen",
+		commandPromoteHeadings: "Überschriften in Auswahl eine Ebene nach oben verschieben",
+		commandDemoteHeadings: "Überschriften in Auswahl eine Ebene nach unten verschieben",
 		explorerToolbarOpenSearch: "Die Dateinamensuche öffnen",
 		explorerToolbarOpenFolderSizes: "Ordnergrößen berechnen und anzeigen",
 		explorerToolbarOpenPinned: "Alle angepinnten Dateien anzeigen",
 		explorerToolbarCleanupEmptyLines: "Doppelte Leerzeilen in der aktuellen Notiz bereinigen",
+		explorerToolbarInsertCallout: "Den markierten Text in ein Callout umwandeln",
+		explorerToolbarMergeCalloutsIntoColumns: "Markierte Callouts in Spalten zusammenführen",
+		explorerToolbarPromoteHeadings: "Markierte Überschriften eine Ebene nach oben verschieben",
+		explorerToolbarDemoteHeadings: "Markierte Überschriften eine Ebene nach unten verschieben",
+		explorerToolbarGroupSearch: "Suche",
+		explorerToolbarGroupStructure: "Struktur",
+		explorerToolbarGroupFormatting: "Formatierung",
+		explorerToolbarGroupCallouts: "Callouts",
 		contextMenuCopyPath: "Relativen Vault-Pfad kopieren",
 		contextMenuCopyPaths: "Relative Vault-Pfade kopieren",
 		contextMenuOpenFolderBrowser: "In Ordneransicht öffnen",
@@ -341,6 +452,38 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		cleanupSuccess: "Doppelte Leerzeilen wurden bereinigt.",
 		cleanupNoChanges: "Keine doppelten Leerzeilen gefunden.",
 		cleanupNoActiveMarkdown: "Keine aktive Markdown-Datei gefunden.",
+		calloutNoActiveMarkdown: "Kein aktiver Markdown-Editor gefunden.",
+		calloutNoSelection: "Bitte markiere zuerst den Text, der in ein Callout umgewandelt werden soll.",
+		calloutInserted: (calloutId: string) => `Callout ${calloutId} eingefügt.`,
+		calloutColumnsNoActiveMarkdown: "Kein aktiver Markdown-Editor gefunden.",
+		calloutColumnsNoSelection: "Bitte markiere die vorhandenen Callouts, die zu Spalten zusammengeführt werden sollen.",
+		calloutColumnsNeedTwo: "Bitte markiere mindestens zwei vollständige Callouts, um sie in Spalten zusammenzuführen.",
+		calloutColumnsMerged: (count: number) => `${count} Callouts wurden zu Spalten zusammengeführt.`,
+		calloutUnwrapNoActiveMarkdown: "Kein aktiver Markdown-Editor gefunden.",
+		calloutUnwrapNoSelection: "Bitte markiere die Callouts, die wieder in normalen Text umgewandelt werden sollen.",
+		calloutUnwrapNoCalloutsFound: "Im markierten Bereich wurden keine vollständigen Callouts gefunden.",
+		calloutUnwrapped: (count: number) => `${count} Callout${count === 1 ? "" : "s"} wurden in normalen Text umgewandelt.`,
+		calloutModalTitle: "Callout einfügen",
+		calloutSearchLabel: "Callouts suchen",
+		calloutSearchDesc: "Filtere die verfügbaren Callout-Typen nach Name oder Bedeutung.",
+		calloutSearchPlaceholder: "note, warning, tip, question",
+		calloutTitleLabel: "Optionaler Titel",
+		calloutTitleDesc: "Leer lassen, um den Standardtitel des Callouts zu verwenden.",
+		calloutTitlePlaceholder: "Eigener Titel",
+		calloutPreviewLabel: "Vorschau",
+		calloutPreviewDesc: "Wähle den Callout-Stil aus, der am besten zum markierten Text passt.",
+		calloutPreviewBody: "Der markierte Text wird in diesem Callout-Stil eingefügt.",
+		calloutInsertButton: "Callout einfügen",
+		calloutNoMatches: "Keine passenden Callouts gefunden.",
+		calloutCustomDescription: "Benutzerdefiniertes Callout aus Callout Manager.",
+		calloutManagedDescription: "Callout aus den Einstellungen von Callout Manager.",
+		calloutSourceBuiltIn: "Standard",
+		calloutSourceManager: "Callout Manager",
+		headingAdjustNoActiveMarkdown: "Kein aktiver Markdown-Editor gefunden.",
+		headingAdjustNoSelection: "Bitte markiere zuerst den Bereich, dessen Überschriften angepasst werden sollen.",
+		headingAdjustNoHeadingsFound: "Im markierten Bereich wurden keine Markdown-Überschriften gefunden.",
+		headingAdjustPromoted: (count: number) => `${count} Überschrift${count === 1 ? "" : "en"} wurde${count === 1 ? "" : "n"} eine Ebene nach oben verschoben.`,
+		headingAdjustDemoted: (count: number) => `${count} Überschrift${count === 1 ? "" : "en"} wurde${count === 1 ? "" : "n"} eine Ebene nach unten verschoben.`,
 		contextMenuSelectIconAndColor: "Icon und Farbe festlegen",
 		itemAppearanceIconHeading: "Icon",
 		itemAppearanceColorsHeading: "Farben",
@@ -392,6 +535,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedSummary: (count: number) => `${count} angepinnte Datei${count === 1 ? "" : "en"}`,
 		pinnedEmpty: "Noch keine angepinnten Dateien.",
 		pinnedRemove: "Pin-Status entfernen",
+		searchResultPin: "Datei anpinnen",
+		searchResultUnpin: "Pin-Status entfernen",
 		folderBrowserHeading: "Ordneransicht",
 		folderBrowserDescription: "Zeigt Ordner, Notizen, Bilder und Dateien als Karten im Hauptbereich an.",
 		folderBrowserSortLabel: "Sortierung",
@@ -439,6 +584,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsShowModifiedDateDesc: "Zeigt das letzte Änderungsdatum in jedem Suchergebnis an.",
 		settingsOpenFolderBrowserOnExplorerClick: "Ordneransicht bei Explorer-Klick öffnen",
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Wenn aktiv, klappt ein Klick auf eine Ordnerzeile den Ordner weiter wie gewohnt auf und öffnet ihn zusätzlich in der Ordneransicht im Hauptbereich.",
+		settingsDisableInternalLinkTargetHighlight: "Abschnittsmarkierung nach internen Links deaktivieren",
+		settingsDisableInternalLinkTargetHighlightDesc: "Entfernt die kurze Hervorhebung, die Obsidian nach einem Sprung zu einer Überschrift oder einem Block per internem Link anzeigt.",
 		settingsUseFrontmatterStickerIcons: "Frontmatter-Sticker als Icons verwenden",
 		settingsUseFrontmatterStickerIconsDesc: "Verwendet das Frontmatter-Feld `sticker` als Fallback-Datei-Icon, wenn kein Plugin-Icon gesetzt ist. Unterstützt Icon-Namen und Vault-SVG-Pfade.",
 		settingsCleanupHeading: "KI-Paste-Bereinigung",
@@ -490,10 +637,23 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		commandOpenSearch: "Abrir busqueda por nombre de archivo",
 		commandOpenFolderBrowser: "Abrir navegador de carpetas",
 		commandCleanupEmptyLines: "Limpiar lineas vacias duplicadas en la nota activa",
+		commandInsertCallout: "Convertir la seleccion en un callout",
+		commandMergeCalloutsIntoColumns: "Unir los callouts seleccionados en columnas",
+		commandUnwrapCallouts: "Quitar callouts de la seleccion",
+		commandPromoteHeadings: "Subir un nivel los encabezados de la seleccion",
+		commandDemoteHeadings: "Bajar un nivel los encabezados de la seleccion",
 		explorerToolbarOpenSearch: "Abrir la vista de busqueda por nombre de archivo",
 		explorerToolbarOpenFolderSizes: "Calcular y mostrar tamanos de carpetas",
 		explorerToolbarOpenPinned: "Mostrar todos los archivos fijados",
 		explorerToolbarCleanupEmptyLines: "Limpiar lineas vacias duplicadas en la nota actual",
+		explorerToolbarInsertCallout: "Convertir el texto seleccionado en un callout",
+		explorerToolbarMergeCalloutsIntoColumns: "Unir los callouts seleccionados en columnas",
+		explorerToolbarPromoteHeadings: "Subir un nivel los encabezados seleccionados",
+		explorerToolbarDemoteHeadings: "Bajar un nivel los encabezados seleccionados",
+		explorerToolbarGroupSearch: "Busqueda",
+		explorerToolbarGroupStructure: "Estructura",
+		explorerToolbarGroupFormatting: "Formato",
+		explorerToolbarGroupCallouts: "Callouts",
 		contextMenuCopyPath: "Copiar ruta relativa del vault",
 		contextMenuCopyPaths: "Copiar rutas relativas del vault",
 		contextMenuOpenFolderBrowser: "Abrir en el navegador de carpetas",
@@ -503,6 +663,38 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		cleanupSuccess: "Se limpiaron las lineas vacias duplicadas.",
 		cleanupNoChanges: "No se encontraron lineas vacias duplicadas.",
 		cleanupNoActiveMarkdown: "No se encontro ningun archivo markdown activo.",
+		calloutNoActiveMarkdown: "No se encontro ningun editor markdown activo.",
+		calloutNoSelection: "Selecciona primero el texto que debe convertirse en un callout.",
+		calloutInserted: (calloutId: string) => `Se inserto el callout ${calloutId}.`,
+		calloutColumnsNoActiveMarkdown: "No se encontro ningun editor markdown activo.",
+		calloutColumnsNoSelection: "Selecciona los callouts existentes que deben unirse en columnas.",
+		calloutColumnsNeedTwo: "Selecciona al menos dos callouts completos para unirlos en columnas.",
+		calloutColumnsMerged: (count: number) => `Se unieron ${count} callouts en columnas.`,
+		calloutUnwrapNoActiveMarkdown: "No se encontro ningun editor markdown activo.",
+		calloutUnwrapNoSelection: "Selecciona los callouts que deben convertirse otra vez en texto normal.",
+		calloutUnwrapNoCalloutsFound: "No se encontraron callouts completos en el texto seleccionado.",
+		calloutUnwrapped: (count: number) => `Se convirtieron ${count} callout${count === 1 ? "" : "s"} en texto normal.`,
+		calloutModalTitle: "Insertar callout",
+		calloutSearchLabel: "Buscar callouts",
+		calloutSearchDesc: "Filtra los tipos de callout disponibles por nombre o significado.",
+		calloutSearchPlaceholder: "note, warning, tip, question",
+		calloutTitleLabel: "Titulo opcional",
+		calloutTitleDesc: "Dejalo vacio para usar el titulo predeterminado del callout.",
+		calloutTitlePlaceholder: "Titulo personalizado",
+		calloutPreviewLabel: "Vista previa",
+		calloutPreviewDesc: "Elige el estilo de callout que mejor se adapte al texto seleccionado.",
+		calloutPreviewBody: "El texto seleccionado se envolvera con este estilo de callout.",
+		calloutInsertButton: "Insertar callout",
+		calloutNoMatches: "Ningun callout coincide con esta busqueda.",
+		calloutCustomDescription: "Callout personalizado de Callout Manager.",
+		calloutManagedDescription: "Callout detectado desde la configuracion de Callout Manager.",
+		calloutSourceBuiltIn: "Integrado",
+		calloutSourceManager: "Callout Manager",
+		headingAdjustNoActiveMarkdown: "No se encontro ningun editor markdown activo.",
+		headingAdjustNoSelection: "Selecciona primero el bloque de texto cuyos encabezados quieres cambiar.",
+		headingAdjustNoHeadingsFound: "No se encontraron encabezados Markdown en el texto seleccionado.",
+		headingAdjustPromoted: (count: number) => `Se subio ${count} encabezado${count === 1 ? "" : "s"} un nivel.`,
+		headingAdjustDemoted: (count: number) => `Se bajo ${count} encabezado${count === 1 ? "" : "s"} un nivel.`,
 		contextMenuSelectIconAndColor: "Seleccionar icono y color",
 		itemAppearanceIconHeading: "Icono",
 		itemAppearanceColorsHeading: "Colores",
@@ -554,6 +746,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedSummary: (count: number) => `${count} archivo${count === 1 ? "" : "s"} fijado${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "Todavia no hay archivos fijados.",
 		pinnedRemove: "Quitar estado fijado",
+		searchResultPin: "Fijar este archivo",
+		searchResultUnpin: "Quitar estado fijado",
 		folderBrowserHeading: "Navegador de carpetas",
 		folderBrowserDescription: "Muestra carpetas, notas, imagenes y archivos como tarjetas en el area principal.",
 		folderBrowserSortLabel: "Ordenar",
@@ -601,6 +795,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsShowModifiedDateDesc: "Muestra la ultima fecha de modificacion en cada resultado de busqueda.",
 		settingsOpenFolderBrowserOnExplorerClick: "Abrir navegador de carpetas al hacer clic en el explorador",
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Si esta opcion esta activa, al hacer clic en una fila de carpeta del explorador de archivos tambien se abre su contenido en la vista principal del navegador de carpetas.",
+		settingsDisableInternalLinkTargetHighlight: "Desactivar el resaltado tras enlaces internos",
+		settingsDisableInternalLinkTargetHighlightDesc: "Elimina el resaltado temporal que Obsidian muestra despues de seguir un enlace interno hacia un encabezado o un bloque.",
 		settingsUseFrontmatterStickerIcons: "Usar iconos sticker del frontmatter",
 		settingsUseFrontmatterStickerIconsDesc: "Usa el campo `sticker` del frontmatter como icono alternativo para archivos cuando no haya un icono del plugin. Admite nombres de iconos y rutas SVG del vault.",
 		settingsCleanupHeading: "Limpieza de pegado de IA",
@@ -652,10 +848,23 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		commandOpenSearch: "Ouvrir la recherche par nom de fichier",
 		commandOpenFolderBrowser: "Ouvrir le navigateur de dossiers",
 		commandCleanupEmptyLines: "Nettoyer les lignes vides dupliquees dans la note active",
+		commandInsertCallout: "Transformer la selection en callout",
+		commandMergeCalloutsIntoColumns: "Fusionner les callouts selectionnes en colonnes",
+		commandUnwrapCallouts: "Retirer les callouts de la selection",
+		commandPromoteHeadings: "Remonter d'un niveau les titres de la selection",
+		commandDemoteHeadings: "Descendre d'un niveau les titres de la selection",
 		explorerToolbarOpenSearch: "Ouvrir la vue de recherche par nom de fichier",
 		explorerToolbarOpenFolderSizes: "Calculer et afficher la taille des dossiers",
 		explorerToolbarOpenPinned: "Afficher tous les fichiers epingles",
 		explorerToolbarCleanupEmptyLines: "Nettoyer les lignes vides dupliquees dans la note active",
+		explorerToolbarInsertCallout: "Transformer le texte selectionne en callout",
+		explorerToolbarMergeCalloutsIntoColumns: "Fusionner les callouts selectionnes en colonnes",
+		explorerToolbarPromoteHeadings: "Remonter d'un niveau les titres selectionnes",
+		explorerToolbarDemoteHeadings: "Descendre d'un niveau les titres selectionnes",
+		explorerToolbarGroupSearch: "Recherche",
+		explorerToolbarGroupStructure: "Structure",
+		explorerToolbarGroupFormatting: "Mise en forme",
+		explorerToolbarGroupCallouts: "Callouts",
 		contextMenuCopyPath: "Copier le chemin relatif du vault",
 		contextMenuCopyPaths: "Copier les chemins relatifs du vault",
 		contextMenuOpenFolderBrowser: "Ouvrir dans le navigateur de dossiers",
@@ -665,6 +874,38 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		cleanupSuccess: "Les lignes vides dupliquees ont ete nettoyees.",
 		cleanupNoChanges: "Aucune ligne vide dupliquee trouvee.",
 		cleanupNoActiveMarkdown: "Aucun fichier markdown actif trouve.",
+		calloutNoActiveMarkdown: "Aucun editeur markdown actif trouve.",
+		calloutNoSelection: "Selectionnez d'abord le texte qui doit etre transforme en callout.",
+		calloutInserted: (calloutId: string) => `Callout ${calloutId} insere.`,
+		calloutColumnsNoActiveMarkdown: "Aucun editeur markdown actif trouve.",
+		calloutColumnsNoSelection: "Selectionnez les callouts existants qui doivent etre fusionnes en colonnes.",
+		calloutColumnsNeedTwo: "Selectionnez au moins deux callouts complets pour les fusionner en colonnes.",
+		calloutColumnsMerged: (count: number) => `${count} callouts fusionnes en colonnes.`,
+		calloutUnwrapNoActiveMarkdown: "Aucun editeur markdown actif trouve.",
+		calloutUnwrapNoSelection: "Selectionnez les callouts qui doivent etre reconvertis en texte normal.",
+		calloutUnwrapNoCalloutsFound: "Aucun callout complet n'a ete trouve dans le texte selectionne.",
+		calloutUnwrapped: (count: number) => `${count} callout${count === 1 ? "" : "s"} converti${count === 1 ? "" : "s"} en texte normal.`,
+		calloutModalTitle: "Inserer un callout",
+		calloutSearchLabel: "Rechercher des callouts",
+		calloutSearchDesc: "Filtrez les types de callout disponibles par nom ou par sens.",
+		calloutSearchPlaceholder: "note, warning, tip, question",
+		calloutTitleLabel: "Titre facultatif",
+		calloutTitleDesc: "Laissez vide pour utiliser le titre par defaut du callout.",
+		calloutTitlePlaceholder: "Titre personnalise",
+		calloutPreviewLabel: "Apercu",
+		calloutPreviewDesc: "Choisissez le style de callout qui correspond le mieux au texte selectionne.",
+		calloutPreviewBody: "Le texte selectionne sera enveloppe dans ce style de callout.",
+		calloutInsertButton: "Inserer le callout",
+		calloutNoMatches: "Aucun callout ne correspond a cette recherche.",
+		calloutCustomDescription: "Callout personnalise depuis Callout Manager.",
+		calloutManagedDescription: "Callout detecte depuis les reglages de Callout Manager.",
+		calloutSourceBuiltIn: "Integre",
+		calloutSourceManager: "Callout Manager",
+		headingAdjustNoActiveMarkdown: "Aucun editeur markdown actif trouve.",
+		headingAdjustNoSelection: "Selectionnez d'abord la zone dont les titres doivent etre modifies.",
+		headingAdjustNoHeadingsFound: "Aucun titre Markdown n'a ete trouve dans le texte selectionne.",
+		headingAdjustPromoted: (count: number) => `${count} titre${count === 1 ? "" : "s"} remonte${count === 1 ? "" : "s"} d'un niveau.`,
+		headingAdjustDemoted: (count: number) => `${count} titre${count === 1 ? "" : "s"} descendu${count === 1 ? "" : "s"} d'un niveau.`,
 		contextMenuSelectIconAndColor: "Choisir l'icone et la couleur",
 		itemAppearanceIconHeading: "Icone",
 		itemAppearanceColorsHeading: "Couleurs",
@@ -716,6 +957,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedSummary: (count: number) => `${count} fichier${count === 1 ? "" : "s"} epingle${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "Aucun fichier epingle pour le moment.",
 		pinnedRemove: "Retirer le statut epingle",
+		searchResultPin: "Epingler ce fichier",
+		searchResultUnpin: "Retirer le statut epingle",
 		folderBrowserHeading: "Navigateur de dossiers",
 		folderBrowserDescription: "Affiche les dossiers, notes, images et fichiers sous forme de cartes dans la zone principale.",
 		folderBrowserSortLabel: "Tri",
@@ -763,6 +1006,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsShowModifiedDateDesc: "Affiche la derniere date de modification dans chaque resultat.",
 		settingsOpenFolderBrowserOnExplorerClick: "Ouvrir le navigateur de dossiers au clic dans l'explorateur",
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Lorsque cette option est activee, un clic sur une ligne de dossier dans l'explorateur de fichiers ouvre aussi son contenu dans la vue principale du navigateur de dossiers.",
+		settingsDisableInternalLinkTargetHighlight: "Desactiver la mise en surbrillance apres un lien interne",
+		settingsDisableInternalLinkTargetHighlightDesc: "Supprime la surbrillance temporaire qu'Obsidian affiche apres avoir suivi un lien interne vers un titre ou un bloc.",
 		settingsUseFrontmatterStickerIcons: "Utiliser les stickers du frontmatter comme icones",
 		settingsUseFrontmatterStickerIconsDesc: "Utilise le champ `sticker` du frontmatter comme icone de secours pour les fichiers lorsqu'aucune icone du plugin n'est definie. Prend en charge les noms d'icones et les chemins SVG du vault.",
 		settingsCleanupHeading: "Nettoyage des collages IA",
@@ -814,10 +1059,23 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		commandOpenSearch: "Abrir busca por nome de arquivo",
 		commandOpenFolderBrowser: "Abrir navegador de pastas",
 		commandCleanupEmptyLines: "Limpar linhas vazias duplicadas na nota ativa",
+		commandInsertCallout: "Transformar a selecao em callout",
+		commandMergeCalloutsIntoColumns: "Mesclar callouts selecionados em colunas",
+		commandUnwrapCallouts: "Remover callouts da selecao",
+		commandPromoteHeadings: "Subir um nivel os titulos da selecao",
+		commandDemoteHeadings: "Descer um nivel os titulos da selecao",
 		explorerToolbarOpenSearch: "Abrir busca por nome de arquivo",
 		explorerToolbarOpenFolderSizes: "Mostrar tamanhos de pastas",
 		explorerToolbarOpenPinned: "Mostrar arquivos fixados",
 		explorerToolbarCleanupEmptyLines: "Limpar linhas vazias duplicadas",
+		explorerToolbarInsertCallout: "Transformar o texto selecionado em callout",
+		explorerToolbarMergeCalloutsIntoColumns: "Mesclar callouts selecionados em colunas",
+		explorerToolbarPromoteHeadings: "Subir um nivel os titulos selecionados",
+		explorerToolbarDemoteHeadings: "Descer um nivel os titulos selecionados",
+		explorerToolbarGroupSearch: "Busca",
+		explorerToolbarGroupStructure: "Estrutura",
+		explorerToolbarGroupFormatting: "Formatacao",
+		explorerToolbarGroupCallouts: "Callouts",
 		contextMenuCopyPath: "Copiar caminho relativo do vault",
 		contextMenuCopyPaths: "Copiar caminhos relativos do vault",
 		contextMenuOpenFolderBrowser: "Abrir no navegador de pastas",
@@ -827,6 +1085,38 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		cleanupSuccess: "As linhas vazias duplicadas foram limpas.",
 		cleanupNoChanges: "Nenhuma linha vazia duplicada encontrada.",
 		cleanupNoActiveMarkdown: "Nenhum arquivo markdown ativo encontrado.",
+		calloutNoActiveMarkdown: "Nenhum editor markdown ativo encontrado.",
+		calloutNoSelection: "Selecione primeiro o texto que deve ser transformado em callout.",
+		calloutInserted: (calloutId: string) => `Callout ${calloutId} inserido.`,
+		calloutColumnsNoActiveMarkdown: "Nenhum editor markdown ativo encontrado.",
+		calloutColumnsNoSelection: "Selecione os callouts existentes que devem ser mesclados em colunas.",
+		calloutColumnsNeedTwo: "Selecione pelo menos dois callouts completos para mescla-los em colunas.",
+		calloutColumnsMerged: (count: number) => `${count} callouts mesclados em colunas.`,
+		calloutUnwrapNoActiveMarkdown: "Nenhum editor markdown ativo encontrado.",
+		calloutUnwrapNoSelection: "Selecione os callouts que devem voltar a ser texto normal.",
+		calloutUnwrapNoCalloutsFound: "Nenhum callout completo foi encontrado no texto selecionado.",
+		calloutUnwrapped: (count: number) => `${count} callout${count === 1 ? "" : "s"} convertido${count === 1 ? "" : "s"} em texto normal.`,
+		calloutModalTitle: "Inserir callout",
+		calloutSearchLabel: "Buscar callouts",
+		calloutSearchDesc: "Filtre os tipos de callout disponiveis por nome ou significado.",
+		calloutSearchPlaceholder: "note, warning, tip, question",
+		calloutTitleLabel: "Titulo opcional",
+		calloutTitleDesc: "Deixe vazio para usar o titulo padrao do callout.",
+		calloutTitlePlaceholder: "Titulo personalizado",
+		calloutPreviewLabel: "Pre-visualizacao",
+		calloutPreviewDesc: "Escolha o estilo de callout que melhor combina com o texto selecionado.",
+		calloutPreviewBody: "O texto selecionado sera envolvido com este estilo de callout.",
+		calloutInsertButton: "Inserir callout",
+		calloutNoMatches: "Nenhum callout corresponde a esta busca.",
+		calloutCustomDescription: "Callout personalizado do Callout Manager.",
+		calloutManagedDescription: "Callout detectado nas configuracoes do Callout Manager.",
+		calloutSourceBuiltIn: "Nativo",
+		calloutSourceManager: "Callout Manager",
+		headingAdjustNoActiveMarkdown: "Nenhum editor markdown ativo encontrado.",
+		headingAdjustNoSelection: "Selecione primeiro o trecho cujo nivel dos titulos deve ser alterado.",
+		headingAdjustNoHeadingsFound: "Nenhum titulo Markdown foi encontrado no texto selecionado.",
+		headingAdjustPromoted: (count: number) => `${count} titulo${count === 1 ? "" : "s"} subiu${count === 1 ? "" : "ram"} um nivel.`,
+		headingAdjustDemoted: (count: number) => `${count} titulo${count === 1 ? "" : "s"} desceu${count === 1 ? "" : "ram"} um nivel.`,
 		contextMenuSelectIconAndColor: "Selecionar icone e cor",
 		itemAppearanceIconHeading: "Icone",
 		itemAppearanceColorsHeading: "Cores",
@@ -878,6 +1168,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		pinnedSummary: (count: number) => `${count} arquivo${count === 1 ? "" : "s"} fixado${count === 1 ? "" : "s"}`,
 		pinnedEmpty: "Nenhum arquivo fixado ainda.",
 		pinnedRemove: "Remover status fixado",
+		searchResultPin: "Fixar este arquivo",
+		searchResultUnpin: "Remover status fixado",
 		folderBrowserHeading: "Navegador de pastas",
 		folderBrowserDescription: "Mostra pastas, notas, imagens e arquivos como cards na area principal.",
 		folderBrowserSortLabel: "Ordenar",
@@ -925,6 +1217,8 @@ const TRANSLATIONS: { en: I18nStrings; de: I18nStrings; es: I18nStrings; fr: I18
 		settingsShowModifiedDateDesc: "Exibe a ultima data de modificacao em cada resultado.",
 		settingsOpenFolderBrowserOnExplorerClick: "Abrir navegador de pastas ao clicar no explorador",
 		settingsOpenFolderBrowserOnExplorerClickDesc: "Quando ativado, clicar em uma linha de pasta no explorador de arquivos tambem abre seu conteudo na visualizacao principal do navegador de pastas.",
+		settingsDisableInternalLinkTargetHighlight: "Desativar destaque apos links internos",
+		settingsDisableInternalLinkTargetHighlightDesc: "Remove o destaque temporario que o Obsidian mostra apos seguir um link interno para um titulo ou bloco.",
 		settingsUseFrontmatterStickerIcons: "Usar stickers do frontmatter como icones",
 		settingsUseFrontmatterStickerIconsDesc: "Usa o campo `sticker` do frontmatter como icone alternativo para arquivos quando nenhum icone do plugin estiver definido. Suporta nomes de icones e caminhos SVG do vault.",
 		settingsCleanupHeading: "Limpeza de colagem por IA",
